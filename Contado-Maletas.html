@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contador de Maletas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 15px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1em;
+        }
+
+        .flight-info {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .flight-info h2 {
+            color: #667eea;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .flight-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            color: #555;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .input-group input {
+            padding: 12px;
+            font-size: 1.1em;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            outline: none;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        .input-group input:focus {
+            border-color: #764ba2;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .scan-section {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .scan-mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: #f0f4ff;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 12px;
+            font-size: 0.95em;
+            font-weight: bold;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+            color: #667eea;
+        }
+
+        .mode-btn.active {
+            background: #667eea;
+            color: white;
+            transform: scale(1.02);
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        #cameraContainer {
+            display: none;
+            margin-bottom: 20px;
+        }
+
+        #cameraContainer.show {
+            display: block;
+        }
+
+        #reader {
+            width: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .camera-hint {
+            text-align: center;
+            color: #667eea;
+            font-weight: bold;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f0f4ff;
+            border-radius: 8px;
+        }
+
+        .scan-input-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        #barcodeInput {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2em;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        #barcodeInput:focus {
+            border-color: #764ba2;
+            box-shadow: 0 0 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .scan-indicator {
+            text-align: center;
+            padding: 15px;
+            background: #f0f4ff;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .category-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .category-btn {
+            padding: 15px 10px;
+            font-size: 0.9em;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            color: white;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        .category-btn.local {
+            background: linear-gradient(135deg, #667eea 0%, #4c63d2 100%);
+        }
+
+        .category-btn.conexion {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .category-btn.priority {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .category-btn.gate-despacho {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .category-btn.gate-counter {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .category-btn.puerta {
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+        }
+
+        .category-btn.avih {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #333;
+        }
+
+        .category-btn.zz {
+            background: linear-gradient(135deg, #ff9a56 0%, #ff6a88 100%);
+        }
+
+        .category-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        .category-btn.active {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1.05); }
+            50% { transform: scale(1.08); }
+        }
+
+        .special-items {
+            display: none;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+            padding: 15px;
+            background: #f0f4ff;
+            border-radius: 10px;
+        }
+
+        .special-items.show {
+            display: grid;
+        }
+
+        .special-btn {
+            padding: 12px;
+            font-size: 0.9em;
+            font-weight: bold;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+            color: #667eea;
+        }
+
+        .special-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .special-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .totals-section {
+            margin-bottom: 20px;
+        }
+
+        .main-totals {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .total-group {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .total-group h2 {
+            color: #667eea;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .total-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .total-header h3 {
+            font-size: 1em;
+            margin-bottom: 5px;
+        }
+
+        .total-header .big-number {
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+
+        .category-detail {
+            padding: 10px;
+            background: #f5f7fa;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .category-detail .name {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .category-detail .number {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .bodegas-totals {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .bodegas-totals h2 {
+            color: #667eea;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .bodega-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .bodega-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .bodega-card-header h3 {
+            color: #667eea;
+            font-size: 1.2em;
+            margin: 0;
+        }
+
+        .bodega-card-header .total {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .bodega-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .bodega-detail-item {
+            background: white;
+            padding: 8px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+        }
+
+        .bodega-detail-item .label {
+            color: #555;
+        }
+
+        .bodega-detail-item .value {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .action-btn {
+            padding: 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .undo-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .reset-btn {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .pdf-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        .history-section {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .history-section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .history-item {
+            padding: 12px;
+            background: #f5f7fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .history-item .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .history-item .barcode {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .history-item .category-tag {
+            padding: 5px 12px;
+            border-radius: 20px;
+            color: white;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .history-item .category-tag.local {
+            background: #667eea;
+        }
+
+        .history-item .category-tag.conexion {
+            background: #f5576c;
+        }
+
+        .history-item .category-tag.priority {
+            background: #00f2fe;
+        }
+
+        .history-item .category-tag.gate-despacho {
+            background: #43e97b;
+        }
+
+        .history-item .category-tag.gate-counter {
+            background: #fa709a;
+        }
+
+        .history-item .category-tag.puerta {
+            background: #330867;
+        }
+
+        .history-item .category-tag.avih {
+            background: #fed6e3;
+            color: #333;
+        }
+
+        .history-item .category-tag.zz {
+            background: #ff6a88;
+        }
+
+        .footer {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .footer h3 {
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .footer p {
+            color: #666;
+            margin: 5px 0;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4caf50;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 1000;
+            animation: slideInRight 0.3s ease;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .category-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .totals-section {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .flight-inputs {
+                grid-template-columns: 1fr;
+            }
+
+            .bodega-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✈️ Contador de Maletas</h1>
+            <p>Sistema de Escaneo por Código de Barras</p>
+        </div>
+
+        <div class="flight-info">
+            <h2>📋 Información del Vuelo</h2>
+            <div class="flight-inputs">
+                <div class="input-group">
+                    <label for="matricula">Matrícula del Avión</label>
+                    <input 
+                        type="text" 
+                        id="matricula" 
+                        placeholder="Ej: CC-COQ"
+                        maxlength="10"
+                    >
+                </div>
+                <div class="input-group">
+                    <label for="servicio">Servicio/Vuelo</label>
+                    <input 
+                        type="text" 
+                        id="servicio" 
+                        placeholder="Ej: LA-30"
+                        maxlength="15"
+                    >
+                </div>
+                <div class="input-group">
+                    <label for="bodega">Número de Bodega</label>
+                    <input 
+                        type="text" 
+                        id="bodega" 
+                        placeholder="Ej: 11"
+                        maxlength="5"
+                    >
+                </div>
+            </div>
+        </div>
+
+        <div class="scan-section">
+            <div class="scan-indicator" id="scanIndicator">
+                Seleccione una categoría para comenzar
+            </div>
+
+            <div class="scan-mode-selector">
+                <button class="mode-btn active" id="modeManual" onclick="switchScanMode('manual')">
+                    ⌨️ Pistola Bluetooth
+                </button>
+                <button class="mode-btn" id="modeCamera" onclick="switchScanMode('camera')">
+                    📷 Cámara
+                </button>
+            </div>
+
+            <div id="cameraContainer">
+                <div id="reader"></div>
+                <div class="camera-hint">📷 Apunte la cámara al código de barras</div>
+            </div>
+
+            <div class="scan-input-container">
+                <input 
+                    type="text" 
+                    id="barcodeInput" 
+                    placeholder="Escanee código de barras aquí..."
+                    autocomplete="off"
+                >
+            </div>
+
+            <div class="category-buttons">
+                <button class="category-btn local" onclick="selectCategory('local')">
+                    🏠 LOCALES
+                </button>
+                <button class="category-btn conexion" onclick="selectCategory('conexion')">
+                    🔄 CONEXIONES
+                </button>
+                <button class="category-btn priority" onclick="selectCategory('priority')">
+                    ⭐ PRIORITY
+                </button>
+                <button class="category-btn gate-despacho" onclick="selectCategory('gate-despacho')">
+                    🚪 GATE DESPACHO
+                </button>
+                <button class="category-btn gate-counter" onclick="selectCategory('gate-counter')">
+                    📊 GATE COUNTER
+                </button>
+                <button class="category-btn puerta" onclick="selectCategory('puerta')">
+                    🚪 MAL. PUERTA
+                </button>
+                <button class="category-btn avih" onclick="selectCategory('avih')">
+                    🐾 AVIH
+                </button>
+                <button class="category-btn zz" onclick="selectCategory('zz')">
+                    🔒 ZZ RETENIDO
+                </button>
+            </div>
+
+            <div class="special-items" id="specialItems">
+                <button class="special-btn" onclick="selectSpecialItem('coche')">
+                    👶 Coche de Bebé
+                </button>
+                <button class="special-btn" onclick="selectSpecialItem('silla')">
+                    ♿ Silla de Ruedas
+                </button>
+            </div>
+        </div>
+
+        <div class="totals-section">
+            <div class="main-totals">
+                <div class="total-group">
+                    <h2>📦 GRUPO PRINCIPAL</h2>
+                    <div class="total-header">
+                        <h3>TOTAL</h3>
+                        <div class="big-number" id="total1">0</div>
+                    </div>
+                    <div class="category-detail">
+                        <span class="name">🏠 Locales</span>
+                        <span class="number" id="detail-local">0</span>
+                    </div>
+                    <div class="category-detail">
+                        <span class="name">🔄 Conexiones</span>
+                        <span class="number" id="detail-conexion">0</span>
+                    </div>
+                    <div class="category-detail">
+                        <span class="name">⭐ Priority</span>
+                        <span class="number" id="detail-priority">0</span>
+                    </div>
+                    <div class="category-detail">
+                        <span class="name">📊 Gate Counter</span>
+                        <span class="number" id="detail-gate-counter">0</span>
+                    </div>
+                    <div class="category-detail">
+                        <span class="name">🐾 AVIH</span>
+                        <span class="number" id="detail-avih">0</span>
+                    </div>
+                </div>
+
+                <div class="total-group">
+                    <h2>🚪 GRUPO GATE</h2>
+                    <div class="total-header">
+                        <h3>TOTAL</h3>
+                        <div class="big-number" id="total2">0</div>
+                    </div>
+                    <div class="category-detail">
+                        <span class="name">🚪 Gate Despacho</span>
+                        <span class="number" id="detail-gate-despacho">0</span>
+                    </div>
+                    <div class="category-detail">
+                        <span class="name">🚪 Mal. Puerta</span>
+                        <span class="number" id="detail-puerta">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bodegas-totals">
+                <h2>🗄️ TOTALES POR BODEGA</h2>
+                <div id="bodegasContainer">
+                    <p style="color: #999; text-align: center; padding: 20px;">No hay bodegas registradas</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="action-btn undo-btn" onclick="undoLast()">
+                ↶ Deshacer Último
+            </button>
+            <button class="action-btn reset-btn" onclick="resetCounters()">
+                🔄 Reiniciar Todo
+            </button>
+            <button class="action-btn pdf-btn" onclick="generatePDF()" style="grid-column: 1 / -1;">
+                📄 Generar Reporte PDF
+            </button>
+        </div>
+
+        <div class="history-section">
+            <h2>📋 Historial de Escaneos</h2>
+            <div id="historyContainer">
+                <p style="color: #999; text-align: center;">No hay escaneos registrados</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <h3>Desarrollado por</h3>
+            <p><strong>Julio Villegas R</strong></p>
+            <p>Developer Freelance</p>
+            <p>📧 <a href="mailto:jvrfox@gmail.com">jvrfox@gmail.com</a></p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    <script>
+        let currentCategory = null;
+        let currentSpecialItem = null;
+        let scanMode = 'manual';
+        let html5QrCode = null;
+        let lastScannedCode = '';
+        let lastScanTime = 0;
+        let counters = {
+            local: 0,
+            conexion: 0,
+            priority: 0,
+            'gate-despacho': 0,
+            'gate-counter': 0,
+            puerta: 0,
+            avih: 0,
+            zz: 0
+        };
+        let history = [];
+
+        const categoryNames = {
+            local: 'LOCALES',
+            conexion: 'CONEXIONES',
+            priority: 'PRIORITY',
+            'gate-despacho': 'GATE DESPACHO',
+            'gate-counter': 'GATE COUNTER',
+            puerta: 'MAL. PUERTA',
+            avih: 'AVIH',
+            zz: 'ZZ RETENIDO'
+        };
+
+        const specialItemNames = {
+            coche: '👶 Coche de Bebé',
+            silla: '♿ Silla de Ruedas'
+        };
+
+        function switchScanMode(mode) {
+            scanMode = mode;
+            
+            document.getElementById('modeManual').classList.remove('active');
+            document.getElementById('modeCamera').classList.remove('active');
+            
+            if (mode === 'manual') {
+                document.getElementById('modeManual').classList.add('active');
+                document.getElementById('cameraContainer').classList.remove('show');
+                document.getElementById('barcodeInput').style.display = 'block';
+                stopCamera();
+            } else {
+                document.getElementById('modeCamera').classList.add('active');
+                document.getElementById('cameraContainer').classList.add('show');
+                document.getElementById('barcodeInput').style.display = 'none';
+                if (currentCategory) {
+                    startCamera();
+                } else {
+                    showToast('⚠️ Seleccione una categoría primero', '#ff9800');
+                }
+            }
+        }
+
+        function startCamera() {
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("reader");
+            }
+
+            const config = {
+                fps: 10,
+                qrbox: { width: 250, height: 150 },
+                formatsToSupport: [
+                    Html5QrcodeSupportedFormats.CODE_128,
+                    Html5QrcodeSupportedFormats.CODE_39,
+                    Html5QrcodeSupportedFormats.EAN_13,
+                    Html5QrcodeSupportedFormats.EAN_8,
+                    Html5QrcodeSupportedFormats.UPC_A,
+                    Html5QrcodeSupportedFormats.UPC_E,
+                    Html5QrcodeSupportedFormats.CODABAR,
+                    Html5QrcodeSupportedFormats.ITF
+                ]
+            };
+
+            html5QrCode.start(
+                { facingMode: "environment" },
+                config,
+                (decodedText, decodedResult) => {
+                    const currentTime = Date.now();
+                    // Evitar escaneos duplicados (mismo código en menos de 2 segundos)
+                    if (decodedText !== lastScannedCode || currentTime - lastScanTime > 2000) {
+                        lastScannedCode = decodedText;
+                        lastScanTime = currentTime;
+                        processBarcode(decodedText);
+                    }
+                },
+                (errorMessage) => {
+                    // Ignorar errores de escaneo normal
+                }
+            ).catch((err) => {
+                console.error("Error al iniciar cámara:", err);
+                showToast('❌ Error al acceder a la cámara. Verifique los permisos.', '#f44336');
+                // Volver a modo manual si falla
+                switchScanMode('manual');
+            });
+        }
+
+        function stopCamera() {
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => {
+                    html5QrCode.clear();
+                }).catch((err) => {
+                    console.error("Error al detener cámara:", err);
+                });
+            }
+        }
+
+        function selectCategory(category) {
+            currentCategory = category;
+            
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            const specialItems = document.getElementById('specialItems');
+            if (category === 'gate-despacho' || category === 'gate-counter') {
+                specialItems.classList.add('show');
+                currentSpecialItem = null;
+                document.querySelectorAll('.special-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.getElementById('scanIndicator').textContent = 
+                    `Categoría: ${categoryNames[category]} - Seleccione tipo de item`;
+            } else {
+                specialItems.classList.remove('show');
+                currentSpecialItem = null;
+                document.getElementById('scanIndicator').textContent = 
+                    `Categoría activa: ${categoryNames[category]} - Listo para escanear`;
+            }
+            
+            setTimeout(() => {
+                if (scanMode === 'manual') {
+                    document.getElementById('barcodeInput').focus();
+                }
+            }, 100);
+            
+            // Si está en modo cámara, iniciar la cámara
+            if (scanMode === 'camera') {
+                startCamera();
+            }
+        }
+
+        function selectSpecialItem(item) {
+            currentSpecialItem = item;
+            
+            document.querySelectorAll('.special-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            document.getElementById('scanIndicator').textContent = 
+                `${categoryNames[currentCategory]} - ${specialItemNames[item]} - Listo para escanear`;
+            
+            setTimeout(() => {
+                if (scanMode === 'manual') {
+                    document.getElementById('barcodeInput').focus();
+                }
+            }, 100);
+            
+            // Si está en modo cámara, iniciar la cámara
+            if (scanMode === 'camera') {
+                startCamera();
+            }
+        }
+
+        function processBarcode(barcode) {
+            if (!currentCategory) {
+                showToast('⚠️ Seleccione una categoría primero', '#ff9800');
+                return;
+            }
+
+            if ((currentCategory === 'gate-despacho' || currentCategory === 'gate-counter') && !currentSpecialItem) {
+                showToast('⚠️ Seleccione tipo de item (Coche/Silla)', '#ff9800');
+                return;
+            }
+
+            const bodegaInput = document.getElementById('bodega').value.trim();
+            if (!bodegaInput) {
+                showToast('⚠️ Ingrese el número de bodega', '#ff9800');
+                document.getElementById('bodega').focus();
+                return;
+            }
+
+            if (!barcode || barcode.trim() === '') {
+                return;
+            }
+
+            counters[currentCategory]++;
+            
+            const matricula = document.getElementById('matricula').value || 'N/A';
+            const servicio = document.getElementById('servicio').value || 'N/A';
+            const bodega = bodegaInput;
+            
+            const timestamp = new Date().toLocaleTimeString('es-CL');
+            history.unshift({
+                barcode: barcode,
+                category: currentCategory,
+                specialItem: currentSpecialItem,
+                time: timestamp,
+                matricula: matricula,
+                servicio: servicio,
+                bodega: bodega
+            });
+
+            updateCounters();
+            updateHistory();
+            
+            let confirmMsg = `✓ ${barcode} - Bodega ${bodega}`;
+            if (currentSpecialItem) {
+                confirmMsg += ` - ${specialItemNames[currentSpecialItem]}`;
+            }
+            showToast(confirmMsg, '#4caf50');
+            
+            document.getElementById('barcodeInput').value = '';
+        }
+
+        function updateCounters() {
+            document.getElementById('detail-local').textContent = counters.local;
+            document.getElementById('detail-conexion').textContent = counters.conexion;
+            document.getElementById('detail-priority').textContent = counters.priority;
+            document.getElementById('detail-gate-counter').textContent = counters['gate-counter'];
+            document.getElementById('detail-avih').textContent = counters.avih;
+            document.getElementById('detail-gate-despacho').textContent = counters['gate-despacho'];
+            document.getElementById('detail-puerta').textContent = counters.puerta;
+            
+            const total1 = counters.local + counters.conexion + counters.priority + 
+                          counters['gate-counter'] + counters.avih;
+            document.getElementById('total1').textContent = total1;
+            
+            const total2 = counters['gate-despacho'] + counters.puerta;
+            document.getElementById('total2').textContent = total2;
+
+            updateBodegaTotals();
+        }
+
+        function updateBodegaTotals() {
+            const bodegasContainer = document.getElementById('bodegasContainer');
+            
+            const bodegaData = {};
+            
+            history.forEach(item => {
+                const bodega = item.bodega || 'Sin Bodega';
+                if (!bodegaData[bodega]) {
+                    bodegaData[bodega] = {
+                        local: 0,
+                        conexion: 0,
+                        priority: 0,
+                        'gate-despacho': 0,
+                        'gate-counter': 0,
+                        puerta: 0,
+                        avih: 0,
+                        zz: 0
+                    };
+                }
+                bodegaData[bodega][item.category]++;
+            });
+
+            if (Object.keys(bodegaData).length === 0) {
+                bodegasContainer.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">No hay bodegas registradas</p>';
+                return;
+            }
+
+            const bodegasOrdenadas = Object.keys(bodegaData).sort((a, b) => {
+                const numA = parseInt(a) || 0;
+                const numB = parseInt(b) || 0;
+                return numA - numB;
+            });
+
+            bodegasContainer.innerHTML = bodegasOrdenadas.map(bodega => {
+                const data = bodegaData[bodega];
+                const total = Object.values(data).reduce((sum, val) => sum + val, 0);
+                
+                return `
+                    <div class="bodega-card">
+                        <div class="bodega-card-header">
+                            <h3>🗄️ BODEGA ${bodega}</h3>
+                            <span class="total">${total}</span>
+                        </div>
+                        <div class="bodega-details">
+                            ${data.local > 0 ? `
+                                <div class="bodega-detail-item">
+                                    <span class="label">🏠 Locales</span>
+                                    <span class="value">${data.local}</span>
+                                </div>
+                            ` : ''}
+                            ${data.conexion > 0 ? `
+                                <div class="bodega-detail-item">
+                                    <span class="label">🔄 Conexiones</span>
+                                    <span class="value">${data.conexion}</span>
+                                </div>
+                            ` : ''}
+                            ${data.priority > 0 ? `
+                                <div class="bodega-detail-item">
+                                    <span class="label">⭐ Priority</span>
+                                    <span class="value">${data.priority}</span>
+                                </div>
+                            ` : ''}
+                            ${data['gate-despacho'] > 0 ? `
+                                <div class="bodega-detail-item">
+                                    <span class="label">🚪 Gate Despacho</span>
+                                    <span class="value">${data['gate-despacho']}</span>
+                                </div>
+                            ` : ''}
+                            ${data['gate-counter'] > 0 ? `
+                                <div class="bodega-detail-item">
+                                    <span class="label">📊 Gate Counter</span>
+                                    <span class="value">${data['gate-counter']}</span>
+                                </div>
+                            ` : ''}
+                            ${data.puerta > 0 ? `
+                                <div class="bodega-detail-item">
+                                    <span class="label">🚪 Mal. Puerta</span>
+                                    <span class="value">${data.puerta}</span>
+                                </div>
+                            ` : ''}
+                            ${data.avih > 0 ? `
+                                <div class="bodega-detail-item">
+                                    <span class="label">🐾 AVIH</span>
+                                    <span class="value">${data.avih}</span>
+                                </div>
+                            ` : ''}
+                            ${data.zz > 0 ? `
+                                <div class="bodega-detail-item">
+                                    <span class="label">🔒 ZZ Retenido</span>
+                                    <span class="value">${data.zz}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateHistory() {
+            const container = document.getElementById('historyContainer');
+            
+            if (history.length === 0) {
+                container.innerHTML = '<p style="color: #999; text-align: center;">No hay escaneos registrados</p>';
+                return;
+            }
+
+            container.innerHTML = history.map(item => {
+                let categoryDisplay = categoryNames[item.category];
+                if (item.specialItem) {
+                    categoryDisplay += ` - ${specialItemNames[item.specialItem]}`;
+                }
+                
+                return `
+                    <div class="history-item">
+                        <div class="header-row">
+                            <div>
+                                <span class="barcode">${item.barcode}</span>
+                                <span style="color: #999; font-size: 0.85em; margin-left: 10px;">${item.time}</span>
+                            </div>
+                            <span class="category-tag ${item.category}">${categoryDisplay}</span>
+                        </div>
+                        <div style="color: #666; font-size: 0.8em; margin-top: 5px;">
+                            ${item.matricula} | ${item.servicio} | <strong>Bodega: ${item.bodega}</strong>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function undoLast() {
+            if (history.length === 0) {
+                showToast('⚠️ No hay escaneos para deshacer', '#ff9800');
+                return;
+            }
+
+            const lastItem = history.shift();
+            counters[lastItem.category]--;
+            
+            updateCounters();
+            updateHistory();
+            
+            showToast('↶ Último escaneo deshecho', '#2196f3');
+        }
+
+        function resetCounters() {
+            if (!confirm('¿Está seguro de reiniciar todos los contadores?')) {
+                return;
+            }
+
+            counters = {
+                local: 0,
+                conexion: 0,
+                priority: 0,
+                'gate-despacho': 0,
+                'gate-counter': 0,
+                puerta: 0,
+                avih: 0,
+                zz: 0
+            };
+            history = [];
+            currentCategory = null;
+            currentSpecialItem = null;
+            
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.special-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.getElementById('specialItems').classList.remove('show');
+            
+            document.getElementById('scanIndicator').textContent = 
+                'Seleccione una categoría para comenzar';
+            
+            stopCamera();
+            
+            updateCounters();
+            updateHistory();
+            
+            showToast('🔄 Contadores reiniciados', '#9c27b0');
+        }
+
+        function showToast(message, color) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            toast.style.background = color;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        function generatePDF() {
+            if (history.length === 0) {
+                showToast('⚠️ No hay datos para generar el PDF', '#ff9800');
+                return;
+            }
+
+            const matricula = document.getElementById('matricula').value || 'N/A';
+            const servicio = document.getElementById('servicio').value || 'N/A';
+            const fecha = new Date().toLocaleDateString('es-CL');
+            const hora = new Date().toLocaleTimeString('es-CL');
+
+            const totalGrupoPrincipal = counters.local + counters.conexion + counters.priority + counters['gate-counter'] + counters.avih;
+            const totalGrupoGate = counters['gate-despacho'] + counters.puerta;
+
+            const barcodesByBodega = {};
+            
+            history.forEach(item => {
+                const bodega = item.bodega || 'Sin Bodega';
+                if (!barcodesByBodega[bodega]) {
+                    barcodesByBodega[bodega] = {};
+                    Object.keys(categoryNames).forEach(cat => {
+                        barcodesByBodega[bodega][cat] = [];
+                    });
+                }
+                
+                let displayText = item.barcode;
+                if (item.specialItem) {
+                    displayText += ` (${specialItemNames[item.specialItem]})`;
+                }
+                barcodesByBodega[bodega][item.category].push({
+                    code: displayText,
+                    time: item.time
+                });
+            });
+
+            const bodegaTotals = {};
+            Object.keys(barcodesByBodega).forEach(bodega => {
+                bodegaTotals[bodega] = {};
+                Object.keys(categoryNames).forEach(cat => {
+                    const count = barcodesByBodega[bodega][cat].length;
+                    if (count > 0) {
+                        bodegaTotals[bodega][cat] = count;
+                    }
+                });
+            });
+
+            let htmlContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Reporte de Maletas - ${servicio}</title>
+                    <style>
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
+                        .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #667eea; padding-bottom: 20px; }
+                        .header h1 { color: #667eea; margin-bottom: 10px; font-size: 24px; }
+                        .flight-info { background: #f5f7fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+                        .flight-info p { margin: 5px 0; font-size: 14px; }
+                        .totals-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+                        .total-box { background: #667eea; color: white; padding: 20px; border-radius: 8px; text-align: center; }
+                        .total-box h3 { margin: 0 0 10px 0; font-size: 16px; }
+                        .total-box .number { font-size: 36px; font-weight: bold; margin-bottom: 15px; }
+                        .total-box .details { margin-top: 10px; font-size: 13px; text-align: left; }
+                        .total-box .details div { margin: 5px 0; padding: 5px; background: rgba(255,255,255,0.2); border-radius: 4px; }
+                        .bodega-section { margin-bottom: 40px; page-break-inside: avoid; border: 2px solid #667eea; border-radius: 10px; padding: 20px; background: #f9fafb; }
+                        .bodega-header { background: #667eea; color: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 18px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+                        .bodega-summary { background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #667eea; }
+                        .bodega-summary h4 { color: #667eea; margin: 0 0 10px 0; }
+                        .bodega-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+                        .bodega-summary-item { background: #f5f7fa; padding: 8px; border-radius: 5px; font-size: 13px; }
+                        .bodega-summary-item strong { color: #667eea; }
+                        .category-section { margin-bottom: 20px; page-break-inside: avoid; }
+                        .category-title { background: #764ba2; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; margin-bottom: 10px; font-size: 14px; }
+                        .barcode-list { background: white; padding: 15px; border-radius: 8px; }
+                        .barcode-item { padding: 8px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; font-size: 13px; }
+                        .barcode-item:last-child { border-bottom: none; }
+                        .barcode-code { font-weight: bold; }
+                        .barcode-time { color: #666; font-size: 12px; }
+                        .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #666; border-top: 2px solid #ddd; padding-top: 20px; }
+                        @media print { body { padding: 10px; } .bodega-section { page-break-inside: avoid; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>✈️ REPORTE DE CONTEO DE MALETAS</h1>
+                        <p>Sistema de Escaneo por Código de Barras</p>
+                    </div>
+                    <div class="flight-info">
+                        <p><strong>Matrícula:</strong> ${matricula}</p>
+                        <p><strong>Servicio/Vuelo:</strong> ${servicio}</p>
+                        <p><strong>Fecha:</strong> ${fecha}</p>
+                        <p><strong>Hora de Reporte:</strong> ${hora}</p>
+                    </div>
+                    <div class="totals-section">
+                        <div class="total-box">
+                            <h3>📦 GRUPO PRINCIPAL</h3>
+                            <div class="number">${totalGrupoPrincipal}</div>
+                            <div class="details">
+                                <div>Locales: ${counters.local}</div>
+                                <div>Conexiones: ${counters.conexion}</div>
+                                <div>Priority: ${counters.priority}</div>
+                                <div>Gate Counter: ${counters['gate-counter']}</div>
+                                <div>AVIH: ${counters.avih}</div>
+                            </div>
+                        </div>
+                        <div class="total-box">
+                            <h3>🚪 GRUPO GATE</h3>
+                            <div class="number">${totalGrupoGate}</div>
+                            <div class="details">
+                                <div>Gate Despacho: ${counters['gate-despacho']}</div>
+                                <div>Mal. Puerta: ${counters.puerta}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <h2 style="color: #667eea; margin-bottom: 20px; font-size: 20px;">📋 DETALLE POR BODEGA</h2>
+            `;
+
+            const bodegasOrdenadas = Object.keys(barcodesByBodega).sort((a, b) => {
+                const numA = parseInt(a) || 0;
+                const numB = parseInt(b) || 0;
+                return numA - numB;
+            });
+
+            bodegasOrdenadas.forEach(bodega => {
+                const totals = bodegaTotals[bodega];
+                const totalBodega = Object.values(totals).reduce((sum, val) => sum + val, 0);
+                
+                htmlContent += `
+                    <div class="bodega-section">
+                        <div class="bodega-header">
+                            <span>🗄️ BODEGA ${bodega}</span>
+                            <span>Total: ${totalBodega} maletas</span>
+                        </div>
+                        <div class="bodega-summary">
+                            <h4>Resumen por Categoría:</h4>
+                            <div class="bodega-summary-grid">
+                `;
+
+                Object.keys(totals).forEach(cat => {
+                    htmlContent += `<div class="bodega-summary-item">${categoryNames[cat]}: <strong>${totals[cat]}</strong></div>`;
+                });
+
+                htmlContent += `</div></div>`;
+
+                Object.keys(categoryNames).forEach(category => {
+                    const barcodes = barcodesByBodega[bodega][category];
+                    const count = barcodes.length;
+                    
+                    if (count > 0) {
+                        htmlContent += `
+                            <div class="category-section">
+                                <div class="category-title">${categoryNames[category]} (${count} ${count === 1 ? 'maleta' : 'maletas'})</div>
+                                <div class="barcode-list">
+                        `;
+
+                        const barcodesOrdenados = [...barcodes].reverse();
+                        barcodesOrdenados.forEach((item, index) => {
+                            htmlContent += `<div class="barcode-item"><span class="barcode-code">${index + 1}. ${item.code}</span><span class="barcode-time">${item.time}</span></div>`;
+                        });
+
+                        htmlContent += `</div></div>`;
+                    }
+                });
+
+                htmlContent += `</div>`;
+            });
+
+            htmlContent += `
+                    <div class="footer">
+                        <p><strong>Desarrollado por Julio Villegas R</strong></p>
+                        <p>Developer Freelance | jvrfox@gmail.com</p>
+                    </div>
+                </body>
+                </html>
+            `;
+
+            try {
+                const printWindow = window.open('', '_blank', 'width=800,height=600');
+                if (!printWindow) {
+                    showToast('⚠️ Por favor permita las ventanas emergentes', '#ff9800');
+                    return;
+                }
+                
+                printWindow.document.open();
+                printWindow.document.write(htmlContent);
+                printWindow.document.close();
+                
+                printWindow.onload = function() {
+                    setTimeout(() => {
+                        printWindow.print();
+                    }, 250);
+                };
+
+                showToast('📄 Generando PDF...', '#667eea');
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                showToast('❌ Error al generar PDF', '#f44336');
+            }
+        }
+
+        document.getElementById('barcodeInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                processBarcode(this.value);
+            }
+        });
+
+        ['matricula', 'servicio', 'bodega'].forEach(id => {
+            document.getElementById(id).addEventListener('focus', function() {
+                window.editingFlightInfo = true;
+            });
+            
+            document.getElementById(id).addEventListener('blur', function() {
+                window.editingFlightInfo = false;
+            });
+        });
+
+        document.getElementById('matricula').addEventListener('input', function(e) {
+            this.value = this.value.toUpperCase();
+        });
+
+        document.getElementById('servicio').addEventListener('input', function(e) {
+            this.value = this.value.toUpperCase();
+        });
+
+        document.getElementById('bodega').addEventListener('input', function(e) {
+            this.value = this.value.toUpperCase();
+        });
+    </script>
+</body>
+</html>
