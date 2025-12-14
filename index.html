@@ -84,12 +84,17 @@
             border-radius: 8px;
             outline: none;
             transition: all 0.3s;
-            text-transform: uppercase;
         }
 
         .input-group input:focus {
             border-color: #764ba2;
             box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .input-group small {
+            color: #999;
+            font-size: 0.8em;
+            margin-top: 3px;
         }
 
         .scan-section {
@@ -639,27 +644,30 @@
                     <input 
                         type="text" 
                         id="matricula" 
-                        placeholder="Ej: CC-COQ"
-                        maxlength="10"
+                        placeholder="CC-COQ"
+                        maxlength="7"
                     >
+                    <small>Formato: CC-XXX</small>
                 </div>
                 <div class="input-group">
                     <label for="servicio">Servicio/Vuelo</label>
                     <input 
                         type="text" 
                         id="servicio" 
-                        placeholder="Ej: LA-30"
-                        maxlength="15"
+                        placeholder="LA-30"
+                        maxlength="10"
                     >
+                    <small>Formato: LA-XX</small>
                 </div>
                 <div class="input-group">
                     <label for="bodega">Número de Bodega</label>
                     <input 
                         type="text" 
                         id="bodega" 
-                        placeholder="Ej: 11"
+                        placeholder="11"
                         maxlength="5"
                     >
+                    <small>Ej: 11, 22, 33</small>
                 </div>
             </div>
         </div>
@@ -819,6 +827,36 @@
         let html5QrCode = null;
         let lastScannedCode = '';
         let lastScanTime = 0;
+        let isProcessing = false;
+        
+        // Crear contexto de audio para sonido de éxito
+        let audioContext = null;
+        
+        function playBeep() {
+            try {
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 800; // Frecuencia del beep
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.2);
+            } catch (e) {
+                console.log('No se pudo reproducir el sonido:', e);
+            }
+        }
+        
         let counters = {
             local: 0,
             conexion: 0,
@@ -895,12 +933,32 @@
                 config,
                 (decodedText, decodedResult) => {
                     const currentTime = Date.now();
-                    // Evitar escaneos duplicados (mismo código en menos de 2 segundos)
-                    if (decodedText !== lastScannedCode || currentTime - lastScanTime > 2000) {
-                        lastScannedCode = decodedText;
-                        lastScanTime = currentTime;
-                        processBarcode(decodedText);
+                    
+                    // Evitar procesamiento si ya está procesando o si han pasado menos de 2 segundos
+                    if (isProcessing) {
+                        return; // Ignorar completamente si está procesando
                     }
+                    
+                    // Verificar si es el mismo código o si no han pasado 2 segundos
+                    if (decodedText === lastScannedCode && currentTime - lastScanTime < 2000) {
+                        return; // Ignorar escaneos duplicados
+                    }
+                    
+                    // Marcar como procesando INMEDIATAMENTE
+                    isProcessing = true;
+                    lastScannedCode = decodedText;
+                    lastScanTime = currentTime;
+                    
+                    // Reproducir sonido INMEDIATAMENTE
+                    playBeep();
+                    
+                    // Procesar el código
+                    processBarcode(decodedText);
+                    
+                    // Esperar 2 segundos antes de permitir otro escaneo
+                    setTimeout(() => {
+                        isProcessing = false;
+                    }, 2000);
                 },
                 (errorMessage) => {
                     // Ignorar errores de escaneo normal
@@ -908,7 +966,6 @@
             ).catch((err) => {
                 console.error("Error al iniciar cámara:", err);
                 showToast('❌ Error al acceder a la cámara. Verifique los permisos.', '#f44336');
-                // Volver a modo manual si falla
                 switchScanMode('manual');
             });
         }
@@ -1467,15 +1524,30 @@
         });
 
         document.getElementById('matricula').addEventListener('input', function(e) {
-            this.value = this.value.toUpperCase();
+            let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            
+            // Formato: CC-XXX (2 letras, guion, 3 caracteres)
+            if (value.length > 2) {
+                value = value.substring(0, 2) + '-' + value.substring(2, 5);
+            }
+            
+            e.target.value = value;
         });
 
         document.getElementById('servicio').addEventListener('input', function(e) {
-            this.value = this.value.toUpperCase();
+            let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            
+            // Formato: LA-XX (2 letras, guion, números)
+            if (value.length > 2) {
+                value = value.substring(0, 2) + '-' + value.substring(2, 6);
+            }
+            
+            e.target.value = value;
         });
 
         document.getElementById('bodega').addEventListener('input', function(e) {
-            this.value = this.value.toUpperCase();
+            // Solo números y letras en mayúsculas
+            e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
         });
     </script>
 </body>
