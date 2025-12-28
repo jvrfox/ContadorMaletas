@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+     <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contador de Maletas</title>
+    <title>Sistema de Maletas - Pozo y Conveyer</title>
     <style>
         * {
             margin: 0;
@@ -24,24 +24,116 @@
             margin: 0 auto;
         }
 
-        .header {
+        /* Selector de Módulo */
+        .module-selector {
             background: white;
-            padding: 20px;
+            padding: 30px;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             margin-bottom: 20px;
             text-align: center;
         }
 
-        .header h1 {
+        .module-selector h1 {
             color: #667eea;
-            font-size: 1.8em;
+            font-size: 2em;
             margin-bottom: 10px;
         }
 
-        .header p {
+        .module-selector p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .module-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .module-btn {
+            padding: 40px 20px;
+            font-size: 1.3em;
+            font-weight: bold;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            color: white;
+        }
+
+        .module-btn.pozo {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .module-btn.conveyer {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .module-btn.cuadre {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            grid-column: 1 / -1;
+        }
+
+        .module-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+        .module-btn .icon {
+            font-size: 2em;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        /* Módulos */
+        .module {
+            display: none;
+        }
+
+        .module.active {
+            display: block;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-content h1 {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+
+        .header-content p {
             color: #666;
             font-size: 1em;
+        }
+
+        .back-btn {
+            padding: 12px 25px;
+            font-size: 1em;
+            font-weight: bold;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            cursor: pointer;
+            background: white;
+            color: #667eea;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: #667eea;
+            color: white;
         }
 
         .flight-info {
@@ -105,6 +197,17 @@
             margin-bottom: 20px;
         }
 
+        .scan-indicator {
+            text-align: center;
+            padding: 15px;
+            background: #f0f4ff;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
         .scan-mode-selector {
             display: flex;
             gap: 10px;
@@ -131,10 +234,6 @@
             background: #667eea;
             color: white;
             transform: scale(1.02);
-        }
-
-        .mode-btn:hover {
-            transform: translateY(-2px);
         }
 
         #cameraContainer {
@@ -167,7 +266,7 @@
             margin-bottom: 20px;
         }
 
-        #barcodeInput {
+        #barcodeInput, #pozoBarcodeInput, #conveyerBarcodeInput {
             width: 100%;
             padding: 15px;
             font-size: 1.2em;
@@ -175,22 +274,57 @@
             border-radius: 10px;
             outline: none;
             transition: all 0.3s;
+            text-align: center;
         }
 
-        #barcodeInput:focus {
+        #barcodeInput:focus, #pozoBarcodeInput:focus, #conveyerBarcodeInput:focus {
             border-color: #764ba2;
             box-shadow: 0 0 15px rgba(102, 126, 234, 0.3);
         }
 
-        .scan-indicator {
-            text-align: center;
-            padding: 15px;
-            background: #f0f4ff;
-            border-radius: 10px;
+        /* Modal para Pozo */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+        }
+
+        .modal-content h3 {
+            color: #667eea;
+            font-size: 1.5em;
             margin-bottom: 20px;
-            font-size: 1em;
+            text-align: center;
+        }
+
+        .modal-content .barcode-display {
+            background: #f0f4ff;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.3em;
             font-weight: bold;
             color: #667eea;
+            margin-bottom: 20px;
         }
 
         .category-buttons {
@@ -226,16 +360,8 @@
             background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
         }
 
-        .category-btn.gate-despacho {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-        }
-
         .category-btn.gate-counter {
             background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        }
-
-        .category-btn.puerta {
-            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
         }
 
         .category-btn.avih {
@@ -243,64 +369,181 @@
             color: #333;
         }
 
-        .category-btn.zz {
-            background: linear-gradient(135deg, #ff9a56 0%, #ff6a88 100%);
-        }
-
         .category-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0,0,0,0.2);
         }
 
-        .category-btn.active {
-            transform: scale(1.05);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1.05); }
-            50% { transform: scale(1.08); }
-        }
-
-        .special-items {
-            display: none;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-top: 10px;
-            padding: 15px;
-            background: #f0f4ff;
-            border-radius: 10px;
-        }
-
-        .special-items.show {
+        .carro-buttons {
             display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
         }
 
-        .special-btn {
-            padding: 12px;
-            font-size: 0.9em;
+        .carro-btn {
+            padding: 20px;
+            font-size: 1.2em;
             font-weight: bold;
-            border: 2px solid #667eea;
-            border-radius: 8px;
+            border: 3px solid #667eea;
+            border-radius: 10px;
             cursor: pointer;
-            transition: all 0.3s;
             background: white;
             color: #667eea;
+            transition: all 0.3s;
         }
 
-        .special-btn:hover {
+        .carro-btn:hover {
             background: #667eea;
             color: white;
-        }
-
-        .special-btn.active {
-            background: #667eea;
-            color: white;
+            transform: scale(1.05);
         }
 
         .totals-section {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             margin-bottom: 20px;
+        }
+
+        .totals-section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .total-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .total-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .total-card h3 {
+            color: #555;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .total-card .count {
+            font-size: 3em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .action-btn {
+            padding: 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .undo-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .reset-btn {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .pdf-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        .history-section {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .history-section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .history-item {
+            padding: 12px;
+            background: #f5f7fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .history-item .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .history-item .barcode {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .history-item .category-tag {
+            padding: 5px 12px;
+            border-radius: 20px;
+            color: white;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .history-item .category-tag.local {
+            background: #667eea;
+        }
+
+        .history-item .category-tag.conexion {
+            background: #f5576c;
+        }
+
+        .history-item .category-tag.priority {
+            background: #00f2fe;
+        }
+
+        .history-item .category-tag.gate-despacho {
+            background: #11998e;
+        }
+
+        .history-item .category-tag.gate-counter {
+            background: #fa709a;
+        }
+
+        .history-item .category-tag.puerta {
+            background: #4a00e0;
+        }
+
+        .history-item .category-tag.avih {
+            background: #fcb69f;
+            color: #333;
+        }
+
+        .history-item .category-tag.zz {
+            background: #eb3349;
         }
 
         .main-totals {
@@ -432,126 +675,57 @@
             color: #667eea;
         }
 
-        .action-buttons {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .action-btn {
+        .carro-card {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
             padding: 15px;
-            font-size: 1.1em;
-            font-weight: bold;
-            border: none;
             border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-            color: white;
-        }
-
-        .undo-btn {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-
-        .reset-btn {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        }
-
-        .pdf-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .action-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-        }
-
-        .history-section {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            margin-bottom: 20px;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .history-section h2 {
-            color: #667eea;
             margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
-        .history-item {
-            padding: 12px;
-            background: #f5f7fa;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            animation: slideIn 0.3s ease;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        .history-item .header-row {
+        .carro-card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #43e97b;
         }
 
-        .history-item .barcode {
+        .carro-card-header h3 {
+            color: #2e7d32;
+            font-size: 1.2em;
+            margin: 0;
+        }
+
+        .carro-card-header .total {
+            font-size: 2em;
             font-weight: bold;
-            color: #333;
+            color: #2e7d32;
         }
 
-        .history-item .category-tag {
-            padding: 5px 12px;
-            border-radius: 20px;
-            color: white;
-            font-size: 0.85em;
+        .carro-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .carro-detail-item {
+            background: white;
+            padding: 8px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+        }
+
+        .carro-detail-item .label {
+            color: #555;
+        }
+
+        .carro-detail-item .value {
             font-weight: bold;
-        }
-
-        .history-item .category-tag.local {
-            background: #667eea;
-        }
-
-        .history-item .category-tag.conexion {
-            background: #f5576c;
-        }
-
-        .history-item .category-tag.priority {
-            background: #00f2fe;
-        }
-
-        .history-item .category-tag.gate-despacho {
-            background: #43e97b;
-        }
-
-        .history-item .category-tag.gate-counter {
-            background: #fa709a;
-        }
-
-        .history-item .category-tag.puerta {
-            background: #330867;
-        }
-
-        .history-item .category-tag.avih {
-            background: #fed6e3;
-            color: #333;
-        }
-
-        .history-item .category-tag.zz {
-            background: #ff6a88;
+            color: #2e7d32;
         }
 
         .footer {
@@ -572,16 +746,6 @@
             margin: 5px 0;
         }
 
-        .footer a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        .footer a:hover {
-            text-decoration: underline;
-        }
-
         .toast {
             position: fixed;
             top: 20px;
@@ -591,7 +755,7 @@
             padding: 15px 25px;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            z-index: 1000;
+            z-index: 2000;
             animation: slideInRight 0.3s ease;
         }
 
@@ -606,16 +770,8 @@
             }
         }
 
-        @media (max-width: 768px) {
-            .category-buttons {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .totals-section {
-                grid-template-columns: 1fr;
-            }
-
-            .action-buttons {
+            @media (max-width: 768px) {
+            .module-buttons {
                 grid-template-columns: 1fr;
             }
 
@@ -623,191 +779,380 @@
                 grid-template-columns: 1fr;
             }
 
+            .total-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .main-totals {
+                grid-template-columns: 1fr;
+            }
+
             .bodega-details {
                 grid-template-columns: 1fr;
+            }
+
+            .carro-details {
+                grid-template-columns: 1fr;
+            }
+
+            .category-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .carro-buttons {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>✈️ Contador de Maletas</h1>
-            <p>Sistema de Escaneo por Código de Barras</p>
+        <!-- Selector de Módulo -->
+        <div id="moduleSelector" class="module-selector">
+            <h1>✈️ Sistema de Gestión de Maletas</h1>
+            <p>Seleccione el módulo con el que desea trabajar</p>
+            <div class="module-buttons">
+                <button class="module-btn pozo" onclick="selectModule('pozo')">
+                    <span class="icon">🚛</span>
+                    POZO
+                    <div style="font-size: 0.7em; margin-top: 10px;">Clasificación por Carro</div>
+                </button>
+                <button class="module-btn conveyer" onclick="selectModule('conveyer')">
+                    <span class="icon">✈️</span>
+                    CONVEYER
+                    <div style="font-size: 0.7em; margin-top: 10px;">Carga a Bodega</div>
+                </button>
+                <button class="module-btn cuadre" onclick="selectModule('cuadre')">
+                    <span class="icon">📊</span>
+                    CUADRE
+                    <div style="font-size: 0.7em; margin-top: 10px;">Comparación de Registros</div>
+                </button>
+            </div>
         </div>
 
-        <div class="flight-info">
-            <h2>📋 Información del Vuelo</h2>
-            <div class="flight-inputs">
-                <div class="input-group">
-                    <label for="matricula">Matrícula del Avión</label>
+        <!-- Módulo POZO -->
+        <div id="pozoModule" class="module">
+            <div class="header">
+                <div class="header-content">
+                    <h1>🚛 POZO - Clasificación de Maletas</h1>
+                    <p>Escaneo y asignación a carros</p>
+                </div>
+                <button class="back-btn" id="pozoBackBtn">← Volver</button>
+            </div>
+
+            <div class="flight-info">
+                <h2>📋 Información del Vuelo</h2>
+                <div class="flight-inputs">
+                    <div class="input-group">
+                        <label for="pozoMatricula">Matrícula del Avión</label>
+                        <input type="text" id="pozoMatricula" placeholder="CC-COQ" maxlength="7">
+                        <small>Formato: CC-XXX</small>
+                    </div>
+                    <div class="input-group">
+                        <label for="pozoServicio">Servicio/Vuelo</label>
+                        <input type="text" id="pozoServicio" placeholder="LA-30" maxlength="10">
+                        <small>Formato: LA-XX</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="scan-section">
+                <div class="scan-indicator" id="pozoScanIndicator">
+                    Listo para escanear maletas
+                </div>
+
+                <div class="scan-mode-selector">
+                    <button class="mode-btn active" id="pozoModeManual" onclick="switchPozoScanMode('manual')">
+                        ⌨️ Pistola Bluetooth
+                    </button>
+                    <button class="mode-btn" id="pozoModeCamera" onclick="switchPozoScanMode('camera')">
+                        📷 Cámara
+                    </button>
+                </div>
+
+                <div id="pozoCameraContainer">
+                    <div id="pozoReader"></div>
+                    <div class="camera-hint">📷 Apunte la cámara al código de barras</div>
+                </div>
+
+                <div class="scan-input-container">
                     <input 
                         type="text" 
-                        id="matricula" 
-                        placeholder="CC-COQ"
-                        maxlength="7"
+                        id="pozoBarcodeInput" 
+                        placeholder="Escanee código de barras aquí..."
+                        autocomplete="off"
                     >
-                    <small>Formato: CC-XXX</small>
                 </div>
-                <div class="input-group">
-                    <label for="servicio">Servicio/Vuelo</label>
+            </div>
+
+            <div class="totals-section">
+                <h2>📊 Totales por Categoría</h2>
+                <div class="total-grid">
+                    <div class="total-card">
+                        <h3>🏠 LOCALES</h3>
+                        <div class="count" id="pozoLocalCount">0</div>
+                    </div>
+                    <div class="total-card">
+                        <h3>🔄 CONEXIONES</h3>
+                        <div class="count" id="pozoConexionCount">0</div>
+                    </div>
+                    <div class="total-card">
+                        <h3>⭐ PRIORITY</h3>
+                        <div class="count" id="pozoPriorityCount">0</div>
+                    </div>
+                    <div class="total-card">
+                        <h3>📊 GATE COUNTER</h3>
+                        <div class="count" id="pozoGateCounterCount">0</div>
+                    </div>
+                    <div class="total-card">
+                        <h3>🐾 AVIH</h3>
+                        <div class="count" id="pozoAvihCount">0</div>
+                    </div>
+                    <div class="total-card" style="grid-column: 1 / -1; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <h3 style="color: white;">TOTAL GENERAL</h3>
+                        <div class="count" style="color: white;" id="pozoTotalCount">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="totals-section">
+                <h2>🚛 Totales por Carro</h2>
+                <div id="pozoCarrosContainer">
+                    <p style="color: #999; text-align: center; padding: 20px;">No hay carros registrados</p>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="action-btn undo-btn" onclick="undoLastPozo()">
+                    ↶ Deshacer Último
+                </button>
+                <button class="action-btn reset-btn" onclick="resetPozo()">
+                    🔄 Reiniciar Todo
+                </button>
+                <button class="action-btn pdf-btn" onclick="generatePozoPDF()" style="grid-column: 1 / -1;">
+                    📄 Generar Reporte PDF
+                </button>
+            </div>
+
+            <div class="history-section">
+                <h2>📋 Historial de Escaneos</h2>
+                <div id="pozoHistoryContainer">
+                    <p style="color: #999; text-align: center;">No hay escaneos registrados</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Módulo CONVEYER -->
+        <div id="conveyerModule" class="module">
+            <div class="header">
+                <div class="header-content">
+                    <h1>✈️ CONVEYER - Carga a Bodega</h1>
+                    <p>Sistema de escaneo y carga al avión</p>
+                </div>
+                <button class="back-btn" id="conveyerBackBtn">← Volver</button>
+            </div>
+
+            <div class="flight-info">
+                <h2>📋 Información del Vuelo</h2>
+                <div class="flight-inputs">
+                    <div class="input-group">
+                        <label for="conveyerMatricula">Matrícula del Avión</label>
+                        <input type="text" id="conveyerMatricula" placeholder="CC-COQ" maxlength="7">
+                        <small>Formato: CC-XXX</small>
+                    </div>
+                    <div class="input-group">
+                        <label for="conveyerServicio">Servicio/Vuelo</label>
+                        <input type="text" id="conveyerServicio" placeholder="LA-30" maxlength="10">
+                        <small>Formato: LA-XX</small>
+                    </div>
+                    <div class="input-group">
+                        <label for="conveyerBodega">Número de Bodega</label>
+                        <input type="text" id="conveyerBodega" placeholder="11" maxlength="5">
+                        <small>Ej: 11, 22, 33</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="scan-section">
+                <div class="scan-indicator" id="conveyerScanIndicator">
+                    Seleccione una categoría para comenzar
+                </div>
+
+                <div class="scan-mode-selector">
+                    <button class="mode-btn active" id="conveyerModeManual" onclick="switchConveyerScanMode('manual')">
+                        ⌨️ Pistola Bluetooth
+                    </button>
+                    <button class="mode-btn" id="conveyerModeCamera" onclick="switchConveyerScanMode('camera')">
+                        📷 Cámara
+                    </button>
+                </div>
+
+                <div id="conveyerCameraContainer">
+                    <div id="conveyerReader"></div>
+                    <div class="camera-hint">📷 Apunte la cámara al código de barras</div>
+                </div>
+
+                <div class="scan-input-container">
                     <input 
                         type="text" 
-                        id="servicio" 
-                        placeholder="LA-30"
-                        maxlength="10"
+                        id="conveyerBarcodeInput" 
+                        placeholder="Escanee código de barras aquí..."
+                        autocomplete="off"
                     >
-                    <small>Formato: LA-XX</small>
                 </div>
-                <div class="input-group">
-                    <label for="bodega">Número de Bodega</label>
-                    <input 
-                        type="text" 
-                        id="bodega" 
-                        placeholder="11"
-                        maxlength="5"
-                    >
-                    <small>Ej: 11, 22, 33</small>
+
+                <div class="category-buttons">
+                    <button class="category-btn local" onclick="selectConveyerCategory('local')">
+                        🏠<br>LOCALES
+                    </button>
+                    <button class="category-btn conexion" onclick="selectConveyerCategory('conexion')">
+                        🔄<br>CONEXIONES
+                    </button>
+                    <button class="category-btn priority" onclick="selectConveyerCategory('priority')">
+                        ⭐<br>PRIORITY
+                    </button>
+                    <button class="category-btn gate-despacho" onclick="selectConveyerCategory('gate-despacho')">
+                        🚪<br>GATE DESPACHO
+                    </button>
+                    <button class="category-btn gate-counter" onclick="selectConveyerCategory('gate-counter')">
+                        📊<br>GATE COUNTER
+                    </button>
+                    <button class="category-btn puerta" onclick="selectConveyerCategory('puerta')">
+                        🚪<br>MAL. PUERTA
+                    </button>
+                    <button class="category-btn avih" onclick="selectConveyerCategory('avih')">
+                        🐾<br>AVIH
+                    </button>
+                    <button class="category-btn zz" onclick="selectConveyerCategory('zz')">
+                        🔒<br>ZZ RETENIDO
+                    </button>
+                </div>
+
+                <div class="special-items" id="conveyerSpecialItems">
+                    <button class="special-btn" onclick="selectConveyerSpecialItem('coche')">
+                        👶<br>COCHE DE BEBÉ
+                    </button>
+                    <button class="special-btn" onclick="selectConveyerSpecialItem('silla')">
+                        ♿<br>SILLA DE RUEDAS
+                    </button>
                 </div>
             </div>
-        </div>
 
-        <div class="scan-section">
-            <div class="scan-indicator" id="scanIndicator">
-                Seleccione una categoría para comenzar
-            </div>
-
-            <div class="scan-mode-selector">
-                <button class="mode-btn active" id="modeManual" onclick="switchScanMode('manual')">
-                    ⌨️ Pistola Bluetooth
-                </button>
-                <button class="mode-btn" id="modeCamera" onclick="switchScanMode('camera')">
-                    📷 Cámara
-                </button>
-            </div>
-
-            <div id="cameraContainer">
-                <div id="reader"></div>
-                <div class="camera-hint">📷 Apunte la cámara al código de barras</div>
-            </div>
-
-            <div class="scan-input-container">
-                <input 
-                    type="text" 
-                    id="barcodeInput" 
-                    placeholder="Escanee código de barras aquí..."
-                    autocomplete="off"
-                >
-            </div>
-
-            <div class="category-buttons">
-                <button class="category-btn local" onclick="selectCategory('local')">
-                    🏠 LOCALES
-                </button>
-                <button class="category-btn conexion" onclick="selectCategory('conexion')">
-                    🔄 CONEXIONES
-                </button>
-                <button class="category-btn priority" onclick="selectCategory('priority')">
-                    ⭐ PRIORITY
-                </button>
-                <button class="category-btn gate-despacho" onclick="selectCategory('gate-despacho')">
-                    🚪 GATE DESPACHO
-                </button>
-                <button class="category-btn gate-counter" onclick="selectCategory('gate-counter')">
-                    📊 GATE COUNTER
-                </button>
-                <button class="category-btn puerta" onclick="selectCategory('puerta')">
-                    🚪 MAL. PUERTA
-                </button>
-                <button class="category-btn avih" onclick="selectCategory('avih')">
-                    🐾 AVIH
-                </button>
-                <button class="category-btn zz" onclick="selectCategory('zz')">
-                    🔒 ZZ RETENIDO
-                </button>
-            </div>
-
-            <div class="special-items" id="specialItems">
-                <button class="special-btn" onclick="selectSpecialItem('coche')">
-                    👶 Coche de Bebé
-                </button>
-                <button class="special-btn" onclick="selectSpecialItem('silla')">
-                    ♿ Silla de Ruedas
-                </button>
-            </div>
-        </div>
-
-        <div class="totals-section">
-            <div class="main-totals">
-                <div class="total-group">
-                    <h2>📦 GRUPO PRINCIPAL</h2>
-                    <div class="total-header">
-                        <h3>TOTAL</h3>
-                        <div class="big-number" id="total1">0</div>
+            <div class="totals-section">
+                <div class="main-totals">
+                    <div class="total-group">
+                        <h2>📦 GRUPO PRINCIPAL</h2>
+                        <div class="total-header">
+                            <h3>TOTAL</h3>
+                            <div class="big-number" id="conveyerTotal1">0</div>
+                        </div>
+                        <div class="category-detail">
+                            <span class="name">🏠 Locales</span>
+                            <span class="number" id="conveyerLocalCount">0</span>
+                        </div>
+                        <div class="category-detail">
+                            <span class="name">🔄 Conexiones</span>
+                            <span class="number" id="conveyerConexionCount">0</span>
+                        </div>
+                        <div class="category-detail">
+                            <span class="name">⭐ Priority</span>
+                            <span class="number" id="conveyerPriorityCount">0</span>
+                        </div>
+                        <div class="category-detail">
+                            <span class="name">📊 Gate Counter</span>
+                            <span class="number" id="conveyerGateCounterCount">0</span>
+                        </div>
+                        <div class="category-detail">
+                            <span class="name">🐾 AVIH</span>
+                            <span class="number" id="conveyerAvihCount">0</span>
+                        </div>
                     </div>
-                    <div class="category-detail">
-                        <span class="name">🏠 Locales</span>
-                        <span class="number" id="detail-local">0</span>
-                    </div>
-                    <div class="category-detail">
-                        <span class="name">🔄 Conexiones</span>
-                        <span class="number" id="detail-conexion">0</span>
-                    </div>
-                    <div class="category-detail">
-                        <span class="name">⭐ Priority</span>
-                        <span class="number" id="detail-priority">0</span>
-                    </div>
-                    <div class="category-detail">
-                        <span class="name">📊 Gate Counter</span>
-                        <span class="number" id="detail-gate-counter">0</span>
-                    </div>
-                    <div class="category-detail">
-                        <span class="name">🐾 AVIH</span>
-                        <span class="number" id="detail-avih">0</span>
+
+                    <div class="total-group">
+                        <h2>🚪 GRUPO GATE</h2>
+                        <div class="total-header">
+                            <h3>TOTAL</h3>
+                            <div class="big-number" id="conveyerTotal2">0</div>
+                        </div>
+                        <div class="category-detail">
+                            <span class="name">🚪 Gate Despacho</span>
+                            <span class="number" id="conveyerGateDespachoCount">0</span>
+                        </div>
+                        <div class="category-detail">
+                            <span class="name">🚪 Mal. Puerta</span>
+                            <span class="number" id="conveyerPuertaCount">0</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="total-group">
-                    <h2>🚪 GRUPO GATE</h2>
-                    <div class="total-header">
-                        <h3>TOTAL</h3>
-                        <div class="big-number" id="total2">0</div>
-                    </div>
-                    <div class="category-detail">
-                        <span class="name">🚪 Gate Despacho</span>
-                        <span class="number" id="detail-gate-despacho">0</span>
-                    </div>
-                    <div class="category-detail">
-                        <span class="name">🚪 Mal. Puerta</span>
-                        <span class="number" id="detail-puerta">0</span>
+                <div class="bodegas-totals">
+                    <h2>🗄️ TOTALES POR BODEGA</h2>
+                    <div id="conveyerBodegasContainer">
+                        <p style="color: #999; text-align: center; padding: 20px;">No hay bodegas registradas</p>
                     </div>
                 </div>
             </div>
 
-            <div class="bodegas-totals">
-                <h2>🗄️ TOTALES POR BODEGA</h2>
-                <div id="bodegasContainer">
-                    <p style="color: #999; text-align: center; padding: 20px;">No hay bodegas registradas</p>
+            <div class="action-buttons">
+                <button class="action-btn undo-btn" onclick="undoLastConveyer()">
+                    ↶ Deshacer Último
+                </button>
+                <button class="action-btn reset-btn" onclick="resetConveyer()">
+                    🔄 Reiniciar Todo
+                </button>
+                <button class="action-btn pdf-btn" onclick="generateConveyerPDF()" style="grid-column: 1 / -1;">
+                    📄 Generar Reporte PDF
+                </button>
+            </div>
+
+            <div class="history-section">
+                <h2>📋 Historial de Escaneos</h2>
+                <div id="conveyerHistoryContainer">
+                    <p style="color: #999; text-align: center;">No hay escaneos registrados</p>
                 </div>
             </div>
         </div>
 
-        <div class="action-buttons">
-            <button class="action-btn undo-btn" onclick="undoLast()">
-                ↶ Deshacer Último
-            </button>
-            <button class="action-btn reset-btn" onclick="resetCounters()">
-                🔄 Reiniciar Todo
-            </button>
-            <button class="action-btn pdf-btn" onclick="generatePDF()" style="grid-column: 1 / -1;">
-                📄 Generar Reporte PDF
-            </button>
-        </div>
+        <!-- Modal para Pozo -->
+        <div id="pozoModal" class="modal">
+            <div class="modal-content">
+                <h3 id="modalTitle">Seleccione Categoría</h3>
+                <div class="barcode-display" id="modalBarcode"></div>
+                
+                <div id="categoryStep" style="display: none;">
+                    <div class="category-buttons">
+                        <button class="category-btn local" onclick="selectPozoCategory('local')">
+                            🏠<br>LOCALES
+                        </button>
+                        <button class="category-btn conexion" onclick="selectPozoCategory('conexion')">
+                            🔄<br>CONEXIONES
+                        </button>
+                        <button class="category-btn priority" onclick="selectPozoCategory('priority')">
+                            ⭐<br>PRIORITY
+                        </button>
+                        <button class="category-btn gate-counter" onclick="selectPozoCategory('gate-counter')">
+                            📊<br>GATE COUNTER
+                        </button>
+                        <button class="category-btn avih" onclick="selectPozoCategory('avih')">
+                            🐾<br>AVIH
+                        </button>
+                    </div>
+                </div>
 
-        <div class="history-section">
-            <h2>📋 Historial de Escaneos</h2>
-            <div id="historyContainer">
-                <p style="color: #999; text-align: center;">No hay escaneos registrados</p>
+                <div id="carroStep" style="display: none;">
+                    <div class="carro-buttons">
+                        <button class="carro-btn" onclick="selectPozoCarro(1)">CARRO 1</button>
+                        <button class="carro-btn" onclick="selectPozoCarro(2)">CARRO 2</button>
+                        <button class="carro-btn" onclick="selectPozoCarro(3)">CARRO 3</button>
+                        <button class="carro-btn" onclick="selectPozoCarro(4)">CARRO 4</button>
+                        <button class="carro-btn" onclick="selectPozoCarro(5)">CARRO 5</button>
+                        <button class="carro-btn" onclick="selectPozoCarro(6)">CARRO 6</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -815,21 +1160,87 @@
             <h3>Desarrollado por</h3>
             <p><strong>Julio Villegas R</strong></p>
             <p>Developer Freelance</p>
-            <p>📧 <a href="mailto:jvrfox@gmail.com">jvrfox@gmail.com</a></p>
+            <p>📧 jvrfox@gmail.com</p>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
     <script>
-        let currentCategory = null;
-        let currentSpecialItem = null;
-        let scanMode = 'manual';
-        let html5QrCode = null;
-        let lastScannedCode = '';
-        let lastScanTime = 0;
-        let isProcessing = false;
-        
-        // Crear contexto de audio para sonido de éxito
+        // Variables globales
+        let currentModule = null;
+        let pozoScanMode = 'manual';
+        let pozoHtml5QrCode = null;
+        let pozoIsProcessing = false;
+        let pozoLastScannedCode = '';
+        let pozoLastScanTime = 0;
+
+        let conveyerScanMode = 'manual';
+        let conveyerHtml5QrCode = null;
+        let conveyerIsProcessing = false;
+        let conveyerLastScannedCode = '';
+        let conveyerLastScanTime = 0;
+        let conveyerCurrentCategory = null;
+        let conveyerCurrentSpecialItem = null;
+
+        // Audio
+        let audioContext = null;
+        <div id="pozoModal" class="modal">
+            <div class="modal-content">
+                <h3 id="modalTitle">Seleccione Categoría</h3>
+                <div class="barcode-display" id="modalBarcode"></div>
+                
+                <div id="categoryStep" style="display: none;">
+                    <div class="category-buttons">
+                        <button class="category-btn local" onclick="selectPozoCategory('local')">
+                            🏠 LOCALES
+                        </button>
+                        <button class="category-btn conexion" onclick="selectPozoCategory('conexion')">
+                            🔄 CONEXIONES
+                        </button>
+                        <button class="category-btn priority" onclick="selectPozoCategory('priority')">
+                            ⭐ PRIORITY
+                        </button>
+                        <button class="category-btn gate-counter" onclick="selectPozoCategory('gate-counter')">
+                            📊 GATE COUNTER
+                        </button>
+                        <button class="category-btn avih" onclick="selectPozoCategory('avih')">
+                            🐾 AVIH
+                        </button>
+                    </div>
+                </div>
+
+                <div id="carroStep" style="display: none;">
+                    <div class="carro-buttons">
+                        <button class="carro-btn" onclick="selectPozoCarro(1)">CARRO 1</button>
+                        <button class="carro-btn" onclick="selectPozoCarro(2)">CARRO 2</button>
+                        <button class="carro-btn" onclick="selectPozoCarro(3)">CARRO 3</button>
+                        <button class="carro-btn" onclick="selectPozoCarro(4)">CARRO 4</button>
+                        <button class="carro-btn" onclick="selectPozoCarro(5)">CARRO 5</button>
+                        <button class="carro-btn" onclick="selectPozoCarro(6)">CARRO 6</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <h3>Desarrollado por</h3>
+            <p><strong>Julio Villegas R</strong></p>
+            <p>Developer Freelance</p>
+            <p>📧 jvrfox@gmail.com</p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    <script>
+        // Variables globales
+        let currentModule = null;
+        let pozoScanMode = 'manual';
+        let pozoHtml5QrCode = null;
+        let pozoIsProcessing = false;
+        let pozoLastScannedCode = '';
+        let pozoLastScanTime = 0;
+
+        // Audio
         let audioContext = null;
         
         function playBeep() {
@@ -844,7 +1255,7 @@
                 oscillator.connect(gainNode);
                 gainNode.connect(audioContext.destination);
                 
-                oscillator.frequency.value = 800; // Frecuencia del beep
+                oscillator.frequency.value = 800;
                 oscillator.type = 'sine';
                 
                 gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
@@ -856,18 +1267,35 @@
                 console.log('No se pudo reproducir el sonido:', e);
             }
         }
-        
-        let counters = {
-            local: 0,
-            conexion: 0,
-            priority: 0,
-            'gate-despacho': 0,
-            'gate-counter': 0,
-            puerta: 0,
-            avih: 0,
-            zz: 0
+
+        // Datos de Pozo
+        let pozoData = {
+            counters: {
+                local: 0,
+                conexion: 0,
+                priority: 0,
+                'gate-counter': 0,
+                avih: 0
+            },
+            history: [],
+            currentBarcode: null,
+            currentCategory: null
         };
-        let history = [];
+
+        // Datos de Conveyer
+        let conveyerData = {
+            counters: {
+                local: 0,
+                conexion: 0,
+                priority: 0,
+                'gate-despacho': 0,
+                'gate-counter': 0,
+                puerta: 0,
+                avih: 0,
+                zz: 0
+            },
+            history: []
+        };
 
         const categoryNames = {
             local: 'LOCALES',
@@ -885,32 +1313,86 @@
             silla: '♿ Silla de Ruedas'
         };
 
-        function switchScanMode(mode) {
-            scanMode = mode;
+        // Selector de módulo
+        function selectModule(module) {
+            currentModule = module;
+            document.getElementById('moduleSelector').style.display = 'none';
             
-            document.getElementById('modeManual').classList.remove('active');
-            document.getElementById('modeCamera').classList.remove('active');
-            
-            if (mode === 'manual') {
-                document.getElementById('modeManual').classList.add('active');
-                document.getElementById('cameraContainer').classList.remove('show');
-                document.getElementById('barcodeInput').style.display = 'block';
-                stopCamera();
-            } else {
-                document.getElementById('modeCamera').classList.add('active');
-                document.getElementById('cameraContainer').classList.add('show');
-                document.getElementById('barcodeInput').style.display = 'none';
-                if (currentCategory) {
-                    startCamera();
-                } else {
-                    showToast('⚠️ Seleccione una categoría primero', '#ff9800');
-                }
+            if (module === 'pozo') {
+                document.getElementById('pozoModule').classList.add('active');
+            } else if (module === 'conveyer') {
+                document.getElementById('conveyerModule').classList.add('active');
+            } else if (module === 'cuadre') {
+                showToast('⚠️ Módulo Cuadre en desarrollo', '#ff9800');
+                backToSelector();
             }
         }
 
-        function startCamera() {
-            if (!html5QrCode) {
-                html5QrCode = new Html5Qrcode("reader");
+        function backToSelector() {
+            // Detener cámaras solo si existen
+            try {
+                if (pozoHtml5QrCode && pozoHtml5QrCode.isScanning) {
+                    stopPozoCamera();
+                }
+            } catch (e) {
+                console.log('Error al detener cámara Pozo:', e);
+            }
+            
+            try {
+                if (conveyerHtml5QrCode && conveyerHtml5QrCode.isScanning) {
+                    stopConveyerCamera();
+                }
+            } catch (e) {
+                console.log('Error al detener cámara Conveyer:', e);
+            }
+            
+            // Limpiar selecciones de categorías
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelectorAll('.special-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Ocultar items especiales
+            const conveyerSpecial = document.getElementById('conveyerSpecialItems');
+            if (conveyerSpecial) conveyerSpecial.classList.remove('show');
+            
+            // Resetear variables de conveyer
+            conveyerCurrentCategory = null;
+            conveyerCurrentSpecialItem = null;
+            
+            // Ocultar todos los módulos
+            document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+            
+            // Mostrar selector
+            document.getElementById('moduleSelector').style.display = 'block';
+            currentModule = null;
+        }
+
+        // Funciones de Pozo
+        function switchPozoScanMode(mode) {
+            pozoScanMode = mode;
+            
+            document.getElementById('pozoModeManual').classList.remove('active');
+            document.getElementById('pozoModeCamera').classList.remove('active');
+            
+            if (mode === 'manual') {
+                document.getElementById('pozoModeManual').classList.add('active');
+                document.getElementById('pozoCameraContainer').classList.remove('show');
+                document.getElementById('pozoBarcodeInput').style.display = 'block';
+                stopPozoCamera();
+            } else {
+                document.getElementById('pozoModeCamera').classList.add('active');
+                document.getElementById('pozoCameraContainer').classList.add('show');
+                document.getElementById('pozoBarcodeInput').style.display = 'none';
+                startPozoCamera();
+            }
+        }
+
+        function startPozoCamera() {
+            if (!pozoHtml5QrCode) {
+                pozoHtml5QrCode = new Html5Qrcode("pozoReader");
             }
 
             const config = {
@@ -928,426 +1410,246 @@
                 ]
             };
 
-            html5QrCode.start(
+            pozoHtml5QrCode.start(
                 { facingMode: "environment" },
                 config,
-                (decodedText, decodedResult) => {
+                (decodedText) => {
                     const currentTime = Date.now();
                     
-                    // Evitar procesamiento si ya está procesando o si han pasado menos de 2 segundos
-                    if (isProcessing) {
-                        return; // Ignorar completamente si está procesando
-                    }
+                    if (pozoIsProcessing) return;
+                    if (decodedText === pozoLastScannedCode && currentTime - pozoLastScanTime < 2000) return;
                     
-                    // Verificar si es el mismo código o si no han pasado 2 segundos
-                    if (decodedText === lastScannedCode && currentTime - lastScanTime < 2000) {
-                        return; // Ignorar escaneos duplicados
-                    }
+                    pozoIsProcessing = true;
+                    pozoLastScannedCode = decodedText;
+                    pozoLastScanTime = currentTime;
                     
-                    // Marcar como procesando INMEDIATAMENTE
-                    isProcessing = true;
-                    lastScannedCode = decodedText;
-                    lastScanTime = currentTime;
-                    
-                    // Reproducir sonido INMEDIATAMENTE
                     playBeep();
+                    processPozoBarcode(decodedText);
                     
-                    // Procesar el código
-                    processBarcode(decodedText);
-                    
-                    // Esperar 2 segundos antes de permitir otro escaneo
                     setTimeout(() => {
-                        isProcessing = false;
+                        pozoIsProcessing = false;
                     }, 2000);
-                },
-                (errorMessage) => {
-                    // Ignorar errores de escaneo normal
                 }
             ).catch((err) => {
                 console.error("Error al iniciar cámara:", err);
-                showToast('❌ Error al acceder a la cámara. Verifique los permisos.', '#f44336');
-                switchScanMode('manual');
+                showToast('❌ Error al acceder a la cámara', '#f44336');
+                switchPozoScanMode('manual');
             });
         }
 
-        function stopCamera() {
-            if (html5QrCode && html5QrCode.isScanning) {
-                html5QrCode.stop().then(() => {
-                    html5QrCode.clear();
+        function stopPozoCamera() {
+            if (pozoHtml5QrCode && pozoHtml5QrCode.isScanning) {
+                pozoHtml5QrCode.stop().then(() => {
+                    pozoHtml5QrCode.clear();
                 }).catch((err) => {
                     console.error("Error al detener cámara:", err);
                 });
             }
         }
 
-        function selectCategory(category) {
-            currentCategory = category;
-            
-            document.querySelectorAll('.category-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            const specialItems = document.getElementById('specialItems');
-            if (category === 'gate-despacho' || category === 'gate-counter') {
-                specialItems.classList.add('show');
-                currentSpecialItem = null;
-                document.querySelectorAll('.special-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                document.getElementById('scanIndicator').textContent = 
-                    `Categoría: ${categoryNames[category]} - Seleccione tipo de item`;
-            } else {
-                specialItems.classList.remove('show');
-                currentSpecialItem = null;
-                document.getElementById('scanIndicator').textContent = 
-                    `Categoría activa: ${categoryNames[category]} - Listo para escanear`;
-            }
-            
-            setTimeout(() => {
-                if (scanMode === 'manual') {
-                    document.getElementById('barcodeInput').focus();
-                }
-            }, 100);
-            
-            // Si está en modo cámara, iniciar la cámara
-            if (scanMode === 'camera') {
-                startCamera();
-            }
+        function processPozoBarcode(barcode) {
+            if (!barcode || barcode.trim() === '') return;
+
+            // Guardar el código y mostrar modal para categoría
+            pozoData.currentBarcode = barcode;
+            document.getElementById('modalBarcode').textContent = barcode;
+            document.getElementById('modalTitle').textContent = 'Seleccione Categoría';
+            document.getElementById('categoryStep').style.display = 'block';
+            document.getElementById('carroStep').style.display = 'none';
+            document.getElementById('pozoModal').classList.add('show');
         }
 
-        function selectSpecialItem(item) {
-            currentSpecialItem = item;
-            
-            document.querySelectorAll('.special-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            document.getElementById('scanIndicator').textContent = 
-                `${categoryNames[currentCategory]} - ${specialItemNames[item]} - Listo para escanear`;
-            
-            setTimeout(() => {
-                if (scanMode === 'manual') {
-                    document.getElementById('barcodeInput').focus();
-                }
-            }, 100);
-            
-            // Si está en modo cámara, iniciar la cámara
-            if (scanMode === 'camera') {
-                startCamera();
-            }
+        function selectPozoCategory(category) {
+            pozoData.currentCategory = category;
+            document.getElementById('modalTitle').textContent = 'Seleccione Número de Carro';
+            document.getElementById('categoryStep').style.display = 'none';
+            document.getElementById('carroStep').style.display = 'block';
         }
 
-        function processBarcode(barcode) {
-            if (!currentCategory) {
-                showToast('⚠️ Seleccione una categoría primero', '#ff9800');
-                return;
-            }
-
-            if ((currentCategory === 'gate-despacho' || currentCategory === 'gate-counter') && !currentSpecialItem) {
-                showToast('⚠️ Seleccione tipo de item (Coche/Silla)', '#ff9800');
-                return;
-            }
-
-            const bodegaInput = document.getElementById('bodega').value.trim();
-            if (!bodegaInput) {
-                showToast('⚠️ Ingrese el número de bodega', '#ff9800');
-                document.getElementById('bodega').focus();
-                return;
-            }
-
-            if (!barcode || barcode.trim() === '') {
-                return;
-            }
-
-            counters[currentCategory]++;
-            
-            const matricula = document.getElementById('matricula').value || 'N/A';
-            const servicio = document.getElementById('servicio').value || 'N/A';
-            const bodega = bodegaInput;
-            
+        function selectPozoCarro(carro) {
+            const matricula = document.getElementById('pozoMatricula').value || 'N/A';
+            const servicio = document.getElementById('pozoServicio').value || 'N/A';
             const timestamp = new Date().toLocaleTimeString('es-CL');
-            history.unshift({
-                barcode: barcode,
-                category: currentCategory,
-                specialItem: currentSpecialItem,
-                time: timestamp,
+
+            // Guardar en historial
+            pozoData.history.unshift({
+                barcode: pozoData.currentBarcode,
+                category: pozoData.currentCategory,
+                carro: carro,
                 matricula: matricula,
                 servicio: servicio,
-                bodega: bodega
+                time: timestamp
             });
 
-            updateCounters();
-            updateHistory();
-            
-            let confirmMsg = `✓ ${barcode} - Bodega ${bodega}`;
-            if (currentSpecialItem) {
-                confirmMsg += ` - ${specialItemNames[currentSpecialItem]}`;
-            }
-            showToast(confirmMsg, '#4caf50');
-            
-            document.getElementById('barcodeInput').value = '';
+            // Incrementar contador
+            pozoData.counters[pozoData.currentCategory]++;
+
+            // Cerrar modal
+            document.getElementById('pozoModal').classList.remove('show');
+
+            // Actualizar UI
+            updatePozoCounters();
+            updatePozoHistory();
+
+            // Mostrar confirmación
+            showToast(`✓ ${pozoData.currentBarcode} - Carro ${carro} - ${categoryNames[pozoData.currentCategory]}`, '#4caf50');
+
+            // Limpiar
+            pozoData.currentBarcode = null;
+            pozoData.currentCategory = null;
+            document.getElementById('pozoBarcodeInput').value = '';
         }
 
-        function updateCounters() {
-            document.getElementById('detail-local').textContent = counters.local;
-            document.getElementById('detail-conexion').textContent = counters.conexion;
-            document.getElementById('detail-priority').textContent = counters.priority;
-            document.getElementById('detail-gate-counter').textContent = counters['gate-counter'];
-            document.getElementById('detail-avih').textContent = counters.avih;
-            document.getElementById('detail-gate-despacho').textContent = counters['gate-despacho'];
-            document.getElementById('detail-puerta').textContent = counters.puerta;
-            
-            const total1 = counters.local + counters.conexion + counters.priority + 
-                          counters['gate-counter'] + counters.avih;
-            document.getElementById('total1').textContent = total1;
-            
-            const total2 = counters['gate-despacho'] + counters.puerta;
-            document.getElementById('total2').textContent = total2;
+        function updatePozoCounters() {
+            document.getElementById('pozoLocalCount').textContent = pozoData.counters.local;
+            document.getElementById('pozoConexionCount').textContent = pozoData.counters.conexion;
+            document.getElementById('pozoPriorityCount').textContent = pozoData.counters.priority;
+            document.getElementById('pozoGateCounterCount').textContent = pozoData.counters['gate-counter'];
+            document.getElementById('pozoAvihCount').textContent = pozoData.counters.avih;
 
-            updateBodegaTotals();
+            const total = Object.values(pozoData.counters).reduce((sum, val) => sum + val, 0);
+            document.getElementById('pozoTotalCount').textContent = total;
+
+            updatePozoCarroTotals();
         }
 
-        function updateBodegaTotals() {
-            const bodegasContainer = document.getElementById('bodegasContainer');
+        function updatePozoCarroTotals() {
+            const carrosContainer = document.getElementById('pozoCarrosContainer');
             
-            const bodegaData = {};
+            // Agrupar por carro
+            const carroData = {};
             
-            history.forEach(item => {
-                const bodega = item.bodega || 'Sin Bodega';
-                if (!bodegaData[bodega]) {
-                    bodegaData[bodega] = {
+            pozoData.history.forEach(item => {
+                const carro = item.carro;
+                if (!carroData[carro]) {
+                    carroData[carro] = {
                         local: 0,
                         conexion: 0,
                         priority: 0,
-                        'gate-despacho': 0,
                         'gate-counter': 0,
-                        puerta: 0,
-                        avih: 0,
-                        zz: 0
+                        avih: 0
                     };
                 }
-                bodegaData[bodega][item.category]++;
+                carroData[carro][item.category]++;
             });
 
-            if (Object.keys(bodegaData).length === 0) {
-                bodegasContainer.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">No hay bodegas registradas</p>';
+            if (Object.keys(carroData).length === 0) {
+                carrosContainer.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">No hay carros registrados</p>';
                 return;
             }
 
-            const bodegasOrdenadas = Object.keys(bodegaData).sort((a, b) => {
-                const numA = parseInt(a) || 0;
-                const numB = parseInt(b) || 0;
-                return numA - numB;
-            });
+            // Ordenar carros numéricamente
+            const carrosOrdenados = Object.keys(carroData).sort((a, b) => parseInt(a) - parseInt(b));
 
-            bodegasContainer.innerHTML = bodegasOrdenadas.map(bodega => {
-                const data = bodegaData[bodega];
+            carrosContainer.innerHTML = carrosOrdenados.map(carro => {
+                const data = carroData[carro];
                 const total = Object.values(data).reduce((sum, val) => sum + val, 0);
                 
                 return `
-                    <div class="bodega-card">
-                        <div class="bodega-card-header">
-                            <h3>🗄️ BODEGA ${bodega}</h3>
+                    <div class="carro-card">
+                        <div class="carro-card-header">
+                            <h3>🚛 CARRO ${carro}</h3>
                             <span class="total">${total}</span>
                         </div>
-                        <div class="bodega-details">
-                            ${data.local > 0 ? `
-                                <div class="bodega-detail-item">
-                                    <span class="label">🏠 Locales</span>
-                                    <span class="value">${data.local}</span>
-                                </div>
-                            ` : ''}
-                            ${data.conexion > 0 ? `
-                                <div class="bodega-detail-item">
-                                    <span class="label">🔄 Conexiones</span>
-                                    <span class="value">${data.conexion}</span>
-                                </div>
-                            ` : ''}
-                            ${data.priority > 0 ? `
-                                <div class="bodega-detail-item">
-                                    <span class="label">⭐ Priority</span>
-                                    <span class="value">${data.priority}</span>
-                                </div>
-                            ` : ''}
-                            ${data['gate-despacho'] > 0 ? `
-                                <div class="bodega-detail-item">
-                                    <span class="label">🚪 Gate Despacho</span>
-                                    <span class="value">${data['gate-despacho']}</span>
-                                </div>
-                            ` : ''}
-                            ${data['gate-counter'] > 0 ? `
-                                <div class="bodega-detail-item">
-                                    <span class="label">📊 Gate Counter</span>
-                                    <span class="value">${data['gate-counter']}</span>
-                                </div>
-                            ` : ''}
-                            ${data.puerta > 0 ? `
-                                <div class="bodega-detail-item">
-                                    <span class="label">🚪 Mal. Puerta</span>
-                                    <span class="value">${data.puerta}</span>
-                                </div>
-                            ` : ''}
-                            ${data.avih > 0 ? `
-                                <div class="bodega-detail-item">
-                                    <span class="label">🐾 AVIH</span>
-                                    <span class="value">${data.avih}</span>
-                                </div>
-                            ` : ''}
-                            ${data.zz > 0 ? `
-                                <div class="bodega-detail-item">
-                                    <span class="label">🔒 ZZ Retenido</span>
-                                    <span class="value">${data.zz}</span>
-                                </div>
-                            ` : ''}
+                        <div class="carro-details">
+                            ${data.local > 0 ? `<div class="carro-detail-item"><span class="label">🏠 Locales</span><span class="value">${data.local}</span></div>` : ''}
+                            ${data.conexion > 0 ? `<div class="carro-detail-item"><span class="label">🔄 Conexiones</span><span class="value">${data.conexion}</span></div>` : ''}
+                            ${data.priority > 0 ? `<div class="carro-detail-item"><span class="label">⭐ Priority</span><span class="value">${data.priority}</span></div>` : ''}
+                            ${data['gate-counter'] > 0 ? `<div class="carro-detail-item"><span class="label">📊 Gate Counter</span><span class="value">${data['gate-counter']}</span></div>` : ''}
+                            ${data.avih > 0 ? `<div class="carro-detail-item"><span class="label">🐾 AVIH</span><span class="value">${data.avih}</span></div>` : ''}
                         </div>
                     </div>
                 `;
             }).join('');
         }
 
-        function updateHistory() {
-            const container = document.getElementById('historyContainer');
+        function updatePozoHistory() {
+            const container = document.getElementById('pozoHistoryContainer');
             
-            if (history.length === 0) {
+            if (pozoData.history.length === 0) {
                 container.innerHTML = '<p style="color: #999; text-align: center;">No hay escaneos registrados</p>';
                 return;
             }
 
-            container.innerHTML = history.map(item => {
-                let categoryDisplay = categoryNames[item.category];
-                if (item.specialItem) {
-                    categoryDisplay += ` - ${specialItemNames[item.specialItem]}`;
-                }
-                
-                return `
-                    <div class="history-item">
-                        <div class="header-row">
-                            <div>
-                                <span class="barcode">${item.barcode}</span>
-                                <span style="color: #999; font-size: 0.85em; margin-left: 10px;">${item.time}</span>
-                            </div>
-                            <span class="category-tag ${item.category}">${categoryDisplay}</span>
+            container.innerHTML = pozoData.history.map(item => `
+                <div class="history-item">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <div>
+                            <strong style="color: #667eea;">${item.barcode}</strong>
+                            <span style="color: #999; font-size: 0.85em; margin-left: 10px;">${item.time}</span>
                         </div>
-                        <div style="color: #666; font-size: 0.8em; margin-top: 5px;">
-                            ${item.matricula} | ${item.servicio} | <strong>Bodega: ${item.bodega}</strong>
-                        </div>
+                        <span style="background: #667eea; color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.85em; font-weight: bold;">
+                            ${categoryNames[item.category]}
+                        </span>
                     </div>
-                `;
-            }).join('');
+                    <div style="color: #666; font-size: 0.85em;">
+                        ${item.matricula} | ${item.servicio} | <strong>Carro: ${item.carro}</strong>
+                    </div>
+                </div>
+            `).join('');
         }
 
-        function undoLast() {
-            if (history.length === 0) {
+        function undoLastPozo() {
+            if (pozoData.history.length === 0) {
                 showToast('⚠️ No hay escaneos para deshacer', '#ff9800');
                 return;
             }
 
-            const lastItem = history.shift();
-            counters[lastItem.category]--;
+            const lastItem = pozoData.history.shift();
+            pozoData.counters[lastItem.category]--;
             
-            updateCounters();
-            updateHistory();
+            updatePozoCounters();
+            updatePozoHistory();
             
             showToast('↶ Último escaneo deshecho', '#2196f3');
         }
 
-        function resetCounters() {
-            if (!confirm('¿Está seguro de reiniciar todos los contadores?')) {
-                return;
-            }
+        function resetPozo() {
+            if (!confirm('¿Está seguro de reiniciar todos los contadores de POZO?')) return;
 
-            counters = {
-                local: 0,
-                conexion: 0,
-                priority: 0,
-                'gate-despacho': 0,
-                'gate-counter': 0,
-                puerta: 0,
-                avih: 0,
-                zz: 0
+            pozoData = {
+                counters: {
+                    local: 0,
+                    conexion: 0,
+                    priority: 0,
+                    'gate-counter': 0,
+                    avih: 0
+                },
+                history: [],
+                currentBarcode: null,
+                currentCategory: null
             };
-            history = [];
-            currentCategory = null;
-            currentSpecialItem = null;
+
+            stopPozoCamera();
+            updatePozoCounters();
+            updatePozoHistory();
             
-            document.querySelectorAll('.category-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            document.querySelectorAll('.special-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            document.getElementById('specialItems').classList.remove('show');
-            
-            document.getElementById('scanIndicator').textContent = 
-                'Seleccione una categoría para comenzar';
-            
-            stopCamera();
-            
-            updateCounters();
-            updateHistory();
-            
-            showToast('🔄 Contadores reiniciados', '#9c27b0');
+            showToast('🔄 Contadores de POZO reiniciados', '#9c27b0');
         }
 
-        function showToast(message, color) {
-            const toast = document.createElement('div');
-            toast.className = 'toast';
-            toast.textContent = message;
-            toast.style.background = color;
-            document.body.appendChild(toast);
-
-            setTimeout(() => {
-                toast.remove();
-            }, 3000);
-        }
-
-        function generatePDF() {
-            if (history.length === 0) {
+        function generatePozoPDF() {
+            if (pozoData.history.length === 0) {
                 showToast('⚠️ No hay datos para generar el PDF', '#ff9800');
                 return;
             }
 
-            const matricula = document.getElementById('matricula').value || 'N/A';
-            const servicio = document.getElementById('servicio').value || 'N/A';
+            const matricula = document.getElementById('pozoMatricula').value || 'N/A';
+            const servicio = document.getElementById('pozoServicio').value || 'N/A';
             const fecha = new Date().toLocaleDateString('es-CL');
             const hora = new Date().toLocaleTimeString('es-CL');
 
-            const totalGrupoPrincipal = counters.local + counters.conexion + counters.priority + counters['gate-counter'] + counters.avih;
-            const totalGrupoGate = counters['gate-despacho'] + counters.puerta;
-
-            const barcodesByBodega = {};
-            
-            history.forEach(item => {
-                const bodega = item.bodega || 'Sin Bodega';
-                if (!barcodesByBodega[bodega]) {
-                    barcodesByBodega[bodega] = {};
-                    Object.keys(categoryNames).forEach(cat => {
-                        barcodesByBodega[bodega][cat] = [];
-                    });
+            // Agrupar por carro
+            const barcodesByCarro = {};
+            pozoData.history.forEach(item => {
+                if (!barcodesByCarro[item.carro]) {
+                    barcodesByCarro[item.carro] = {};
                 }
-                
-                let displayText = item.barcode;
-                if (item.specialItem) {
-                    displayText += ` (${specialItemNames[item.specialItem]})`;
+                if (!barcodesByCarro[item.carro][item.category]) {
+                    barcodesByCarro[item.carro][item.category] = [];
                 }
-                barcodesByBodega[bodega][item.category].push({
-                    code: displayText,
+                barcodesByCarro[item.carro][item.category].push({
+                    code: item.barcode,
                     time: item.time
-                });
-            });
-
-            const bodegaTotals = {};
-            Object.keys(barcodesByBodega).forEach(bodega => {
-                bodegaTotals[bodega] = {};
-                Object.keys(categoryNames).forEach(cat => {
-                    const count = barcodesByBodega[bodega][cat].length;
-                    if (count > 0) {
-                        bodegaTotals[bodega][cat] = count;
-                    }
                 });
             });
 
@@ -1356,42 +1658,32 @@
                 <html>
                 <head>
                     <meta charset="UTF-8">
-                    <title>Reporte de Maletas - ${servicio}</title>
+                    <title>Reporte POZO - ${servicio}</title>
                     <style>
                         * { margin: 0; padding: 0; box-sizing: border-box; }
                         body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
-                        .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #667eea; padding-bottom: 20px; }
-                        .header h1 { color: #667eea; margin-bottom: 10px; font-size: 24px; }
+                        .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #43e97b; padding-bottom: 20px; }
+                        .header h1 { color: #43e97b; margin-bottom: 10px; font-size: 24px; }
                         .flight-info { background: #f5f7fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
                         .flight-info p { margin: 5px 0; font-size: 14px; }
-                        .totals-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
-                        .total-box { background: #667eea; color: white; padding: 20px; border-radius: 8px; text-align: center; }
-                        .total-box h3 { margin: 0 0 10px 0; font-size: 16px; }
-                        .total-box .number { font-size: 36px; font-weight: bold; margin-bottom: 15px; }
-                        .total-box .details { margin-top: 10px; font-size: 13px; text-align: left; }
-                        .total-box .details div { margin: 5px 0; padding: 5px; background: rgba(255,255,255,0.2); border-radius: 4px; }
-                        .bodega-section { margin-bottom: 40px; page-break-inside: avoid; border: 2px solid #667eea; border-radius: 10px; padding: 20px; background: #f9fafb; }
-                        .bodega-header { background: #667eea; color: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 18px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-                        .bodega-summary { background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #667eea; }
-                        .bodega-summary h4 { color: #667eea; margin: 0 0 10px 0; }
-                        .bodega-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-                        .bodega-summary-item { background: #f5f7fa; padding: 8px; border-radius: 5px; font-size: 13px; }
-                        .bodega-summary-item strong { color: #667eea; }
-                        .category-section { margin-bottom: 20px; page-break-inside: avoid; }
-                        .category-title { background: #764ba2; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; margin-bottom: 10px; font-size: 14px; }
+                        .totals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px; }
+                        .total-box { background: #43e97b; color: white; padding: 20px; border-radius: 8px; text-align: center; }
+                        .total-box h3 { margin: 0 0 10px 0; font-size: 14px; }
+                        .total-box .number { font-size: 32px; font-weight: bold; }
+                        .carro-section { margin-bottom: 40px; border: 2px solid #43e97b; border-radius: 10px; padding: 20px; background: #f9fafb; page-break-inside: avoid; }
+                        .carro-header { background: #43e97b; color: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 18px; font-weight: bold; }
+                        .category-section { margin-bottom: 20px; }
+                        .category-title { background: #38f9d7; color: #333; padding: 10px 15px; border-radius: 8px; font-weight: bold; margin-bottom: 10px; }
                         .barcode-list { background: white; padding: 15px; border-radius: 8px; }
-                        .barcode-item { padding: 8px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; font-size: 13px; }
+                        .barcode-item { padding: 8px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; }
                         .barcode-item:last-child { border-bottom: none; }
-                        .barcode-code { font-weight: bold; }
-                        .barcode-time { color: #666; font-size: 12px; }
                         .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #666; border-top: 2px solid #ddd; padding-top: 20px; }
-                        @media print { body { padding: 10px; } .bodega-section { page-break-inside: avoid; } }
                     </style>
                 </head>
                 <body>
                     <div class="header">
-                        <h1>✈️ REPORTE DE CONTEO DE MALETAS</h1>
-                        <p>Sistema de Escaneo por Código de Barras</p>
+                        <h1>🚛 REPORTE POZO - CLASIFICACIÓN DE MALETAS</h1>
+                        <p>Sistema de Gestión de Maletas</p>
                     </div>
                     <div class="flight-info">
                         <p><strong>Matrícula:</strong> ${matricula}</p>
@@ -1399,75 +1691,65 @@
                         <p><strong>Fecha:</strong> ${fecha}</p>
                         <p><strong>Hora de Reporte:</strong> ${hora}</p>
                     </div>
-                    <div class="totals-section">
+                    <div class="totals">
                         <div class="total-box">
-                            <h3>📦 GRUPO PRINCIPAL</h3>
-                            <div class="number">${totalGrupoPrincipal}</div>
-                            <div class="details">
-                                <div>Locales: ${counters.local}</div>
-                                <div>Conexiones: ${counters.conexion}</div>
-                                <div>Priority: ${counters.priority}</div>
-                                <div>Gate Counter: ${counters['gate-counter']}</div>
-                                <div>AVIH: ${counters.avih}</div>
-                            </div>
+                            <h3>🏠 LOCALES</h3>
+                            <div class="number">${pozoData.counters.local}</div>
                         </div>
                         <div class="total-box">
-                            <h3>🚪 GRUPO GATE</h3>
-                            <div class="number">${totalGrupoGate}</div>
-                            <div class="details">
-                                <div>Gate Despacho: ${counters['gate-despacho']}</div>
-                                <div>Mal. Puerta: ${counters.puerta}</div>
-                            </div>
+                            <h3>🔄 CONEXIONES</h3>
+                            <div class="number">${pozoData.counters.conexion}</div>
+                        </div>
+                        <div class="total-box">
+                            <h3>⭐ PRIORITY</h3>
+                            <div class="number">${pozoData.counters.priority}</div>
+                        </div>
+                        <div class="total-box">
+                            <h3>📊 GATE COUNTER</h3>
+                            <div class="number">${pozoData.counters['gate-counter']}</div>
+                        </div>
+                        <div class="total-box">
+                            <h3>🐾 AVIH</h3>
+                            <div class="number">${pozoData.counters.avih}</div>
+                        </div>
+                        <div class="total-box" style="grid-column: 1 / -1; background: #667eea;">
+                            <h3>TOTAL GENERAL</h3>
+                            <div class="number">${Object.values(pozoData.counters).reduce((a, b) => a + b, 0)}</div>
                         </div>
                     </div>
-                    <h2 style="color: #667eea; margin-bottom: 20px; font-size: 20px;">📋 DETALLE POR BODEGA</h2>
+                    <h2 style="color: #43e97b; margin-bottom: 20px;">📋 DETALLE POR CARRO</h2>
             `;
 
-            const bodegasOrdenadas = Object.keys(barcodesByBodega).sort((a, b) => {
-                const numA = parseInt(a) || 0;
-                const numB = parseInt(b) || 0;
-                return numA - numB;
-            });
+            // Ordenar carros
+            const carrosOrdenados = Object.keys(barcodesByCarro).sort((a, b) => parseInt(a) - parseInt(b));
 
-            bodegasOrdenadas.forEach(bodega => {
-                const totals = bodegaTotals[bodega];
-                const totalBodega = Object.values(totals).reduce((sum, val) => sum + val, 0);
-                
+            carrosOrdenados.forEach(carro => {
+                const categories = barcodesByCarro[carro];
+                const totalCarro = Object.values(categories).reduce((sum, arr) => sum + arr.length, 0);
+
                 htmlContent += `
-                    <div class="bodega-section">
-                        <div class="bodega-header">
-                            <span>🗄️ BODEGA ${bodega}</span>
-                            <span>Total: ${totalBodega} maletas</span>
-                        </div>
-                        <div class="bodega-summary">
-                            <h4>Resumen por Categoría:</h4>
-                            <div class="bodega-summary-grid">
+                    <div class="carro-section">
+                        <div class="carro-header">🚛 CARRO ${carro} - Total: ${totalCarro} maletas</div>
                 `;
 
-                Object.keys(totals).forEach(cat => {
-                    htmlContent += `<div class="bodega-summary-item">${categoryNames[cat]}: <strong>${totals[cat]}</strong></div>`;
-                });
+                Object.keys(categories).forEach(category => {
+                    const barcodes = categories[category];
+                    htmlContent += `
+                        <div class="category-section">
+                            <div class="category-title">${categoryNames[category]} (${barcodes.length})</div>
+                            <div class="barcode-list">
+                    `;
 
-                htmlContent += `</div></div>`;
-
-                Object.keys(categoryNames).forEach(category => {
-                    const barcodes = barcodesByBodega[bodega][category];
-                    const count = barcodes.length;
-                    
-                    if (count > 0) {
+                    barcodes.reverse().forEach((item, index) => {
                         htmlContent += `
-                            <div class="category-section">
-                                <div class="category-title">${categoryNames[category]} (${count} ${count === 1 ? 'maleta' : 'maletas'})</div>
-                                <div class="barcode-list">
+                            <div class="barcode-item">
+                                <span><strong>${index + 1}. ${item.code}</strong></span>
+                                <span style="color: #666; font-size: 12px;">${item.time}</span>
+                            </div>
                         `;
+                    });
 
-                        const barcodesOrdenados = [...barcodes].reverse();
-                        barcodesOrdenados.forEach((item, index) => {
-                            htmlContent += `<div class="barcode-item"><span class="barcode-code">${index + 1}. ${item.code}</span><span class="barcode-time">${item.time}</span></div>`;
-                        });
-
-                        htmlContent += `</div></div>`;
-                    }
+                    htmlContent += `</div></div>`;
                 });
 
                 htmlContent += `</div>`;
@@ -1506,49 +1788,437 @@
             }
         }
 
-        document.getElementById('barcodeInput').addEventListener('keypress', function(e) {
+        // Event Listeners
+        document.getElementById('pozoBarcodeInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                processBarcode(this.value);
+                processPozoBarcode(this.value);
             }
         });
 
-        ['matricula', 'servicio', 'bodega'].forEach(id => {
-            document.getElementById(id).addEventListener('focus', function() {
-                window.editingFlightInfo = true;
-            });
-            
-            document.getElementById(id).addEventListener('blur', function() {
-                window.editingFlightInfo = false;
-            });
-        });
-
-        document.getElementById('matricula').addEventListener('input', function(e) {
+        // Formato automático de campos
+        document.getElementById('pozoMatricula').addEventListener('input', function(e) {
             let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-            
-            // Formato: CC-XXX (2 letras, guion, 3 caracteres)
             if (value.length > 2) {
                 value = value.substring(0, 2) + '-' + value.substring(2, 5);
             }
-            
             e.target.value = value;
         });
 
-        document.getElementById('servicio').addEventListener('input', function(e) {
+        document.getElementById('pozoServicio').addEventListener('input', function(e) {
             let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-            
-            // Formato: LA-XX (2 letras, guion, números)
             if (value.length > 2) {
                 value = value.substring(0, 2) + '-' + value.substring(2, 6);
             }
-            
             e.target.value = value;
         });
 
-        document.getElementById('bodega').addEventListener('input', function(e) {
-            // Solo números y letras en mayúsculas
+        // ============================================
+        // FUNCIONES DE CONVEYER
+        // ============================================
+
+        function switchConveyerScanMode(mode) {
+            conveyerScanMode = mode;
+            
+            document.getElementById('conveyerModeManual').classList.remove('active');
+            document.getElementById('conveyerModeCamera').classList.remove('active');
+            
+            if (mode === 'manual') {
+                document.getElementById('conveyerModeManual').classList.add('active');
+                document.getElementById('conveyerCameraContainer').classList.remove('show');
+                document.getElementById('conveyerBarcodeInput').style.display = 'block';
+                stopConveyerCamera();
+            } else {
+                document.getElementById('conveyerModeCamera').classList.add('active');
+                document.getElementById('conveyerCameraContainer').classList.add('show');
+                document.getElementById('conveyerBarcodeInput').style.display = 'none';
+                if (conveyerCurrentCategory) {
+                    startConveyerCamera();
+                } else {
+                    showToast('⚠️ Seleccione una categoría primero', '#ff9800');
+                }
+            }
+        }
+
+        function startConveyerCamera() {
+            if (!conveyerHtml5QrCode) {
+                conveyerHtml5QrCode = new Html5Qrcode("conveyerReader");
+            }
+
+            const config = {
+                fps: 10,
+                qrbox: { width: 250, height: 150 },
+                formatsToSupport: [
+                    Html5QrcodeSupportedFormats.CODE_128,
+                    Html5QrcodeSupportedFormats.CODE_39,
+                    Html5QrcodeSupportedFormats.EAN_13,
+                    Html5QrcodeSupportedFormats.EAN_8,
+                    Html5QrcodeSupportedFormats.UPC_A,
+                    Html5QrcodeSupportedFormats.UPC_E,
+                    Html5QrcodeSupportedFormats.CODABAR,
+                    Html5QrcodeSupportedFormats.ITF
+                ]
+            };
+
+            conveyerHtml5QrCode.start(
+                { facingMode: "environment" },
+                config,
+                (decodedText) => {
+                    const currentTime = Date.now();
+                    
+                    if (conveyerIsProcessing) return;
+                    if (decodedText === conveyerLastScannedCode && currentTime - conveyerLastScanTime < 2000) return;
+                    
+                    conveyerIsProcessing = true;
+                    conveyerLastScannedCode = decodedText;
+                    conveyerLastScanTime = currentTime;
+                    
+                    playBeep();
+                    processConveyerBarcode(decodedText);
+                    
+                    setTimeout(() => {
+                        conveyerIsProcessing = false;
+                    }, 2000);
+                }
+            ).catch((err) => {
+                console.error("Error al iniciar cámara:", err);
+                showToast('❌ Error al acceder a la cámara', '#f44336');
+                switchConveyerScanMode('manual');
+            });
+        }
+
+        function stopConveyerCamera() {
+            if (conveyerHtml5QrCode && conveyerHtml5QrCode.isScanning) {
+                conveyerHtml5QrCode.stop().then(() => {
+                    conveyerHtml5QrCode.clear();
+                }).catch((err) => {
+                    console.error("Error al detener cámara:", err);
+                });
+            }
+        }
+
+        function selectConveyerCategory(category) {
+            conveyerCurrentCategory = category;
+            
+            document.querySelectorAll('#conveyerModule .category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            const specialItems = document.getElementById('conveyerSpecialItems');
+            if (category === 'gate-despacho' || category === 'gate-counter') {
+                specialItems.classList.add('show');
+                conveyerCurrentSpecialItem = null;
+                document.querySelectorAll('.special-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.getElementById('conveyerScanIndicator').textContent = 
+                    `Categoría: ${categoryNames[category]} - Seleccione tipo de item`;
+            } else {
+                specialItems.classList.remove('show');
+                conveyerCurrentSpecialItem = null;
+                document.getElementById('conveyerScanIndicator').textContent = 
+                    `Categoría activa: ${categoryNames[category]} - Listo para escanear`;
+            }
+            
+            if (conveyerScanMode === 'manual') {
+                setTimeout(() => {
+                    document.getElementById('conveyerBarcodeInput').focus();
+                }, 100);
+            } else if (conveyerScanMode === 'camera') {
+                startConveyerCamera();
+            }
+        }
+
+        function selectConveyerSpecialItem(item) {
+            conveyerCurrentSpecialItem = item;
+            
+            document.querySelectorAll('.special-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            document.getElementById('conveyerScanIndicator').textContent = 
+                `${categoryNames[conveyerCurrentCategory]} - ${specialItemNames[item]} - Listo para escanear`;
+            
+            if (conveyerScanMode === 'manual') {
+                setTimeout(() => {
+                    document.getElementById('conveyerBarcodeInput').focus();
+                }, 100);
+            } else if (conveyerScanMode === 'camera') {
+                startConveyerCamera();
+            }
+        }
+
+        function processConveyerBarcode(barcode) {
+            if (!conveyerCurrentCategory) {
+                showToast('⚠️ Seleccione una categoría primero', '#ff9800');
+                return;
+            }
+
+            if ((conveyerCurrentCategory === 'gate-despacho' || conveyerCurrentCategory === 'gate-counter') && !conveyerCurrentSpecialItem) {
+                showToast('⚠️ Seleccione tipo de item (Coche/Silla)', '#ff9800');
+                return;
+            }
+
+            const bodegaInput = document.getElementById('conveyerBodega').value.trim();
+            if (!bodegaInput) {
+                showToast('⚠️ Ingrese el número de bodega', '#ff9800');
+                document.getElementById('conveyerBodega').focus();
+                return;
+            }
+
+            if (!barcode || barcode.trim() === '') return;
+
+            conveyerData.counters[conveyerCurrentCategory]++;
+            
+            const matricula = document.getElementById('conveyerMatricula').value || 'N/A';
+            const servicio = document.getElementById('conveyerServicio').value || 'N/A';
+            const bodega = bodegaInput;
+            
+            const timestamp = new Date().toLocaleTimeString('es-CL');
+            conveyerData.history.unshift({
+                barcode: barcode,
+                category: conveyerCurrentCategory,
+                specialItem: conveyerCurrentSpecialItem,
+                time: timestamp,
+                matricula: matricula,
+                servicio: servicio,
+                bodega: bodega
+            });
+
+            updateConveyerCounters();
+            updateConveyerHistory();
+            
+            let confirmMsg = `✓ ${barcode} - Bodega ${bodega}`;
+            if (conveyerCurrentSpecialItem) {
+                confirmMsg += ` - ${specialItemNames[conveyerCurrentSpecialItem]}`;
+            }
+            showToast(confirmMsg, '#4caf50');
+            
+            document.getElementById('conveyerBarcodeInput').value = '';
+        }
+
+        function updateConveyerCounters() {
+            document.getElementById('conveyerLocalCount').textContent = conveyerData.counters.local;
+            document.getElementById('conveyerConexionCount').textContent = conveyerData.counters.conexion;
+            document.getElementById('conveyerPriorityCount').textContent = conveyerData.counters.priority;
+            document.getElementById('conveyerGateCounterCount').textContent = conveyerData.counters['gate-counter'];
+            document.getElementById('conveyerAvihCount').textContent = conveyerData.counters.avih;
+            document.getElementById('conveyerGateDespachoCount').textContent = conveyerData.counters['gate-despacho'];
+            document.getElementById('conveyerPuertaCount').textContent = conveyerData.counters.puerta;
+            
+            const total1 = conveyerData.counters.local + conveyerData.counters.conexion + conveyerData.counters.priority + 
+                          conveyerData.counters['gate-counter'] + conveyerData.counters.avih;
+            document.getElementById('conveyerTotal1').textContent = total1;
+            
+            const total2 = conveyerData.counters['gate-despacho'] + conveyerData.counters.puerta;
+            document.getElementById('conveyerTotal2').textContent = total2;
+
+            updateConveyerBodegaTotals();
+        }
+
+        function updateConveyerBodegaTotals() {
+            const bodegasContainer = document.getElementById('conveyerBodegasContainer');
+            
+            const bodegaData = {};
+            
+            conveyerData.history.forEach(item => {
+                const bodega = item.bodega || 'Sin Bodega';
+                if (!bodegaData[bodega]) {
+                    bodegaData[bodega] = {
+                        local: 0,
+                        conexion: 0,
+                        priority: 0,
+                        'gate-despacho': 0,
+                        'gate-counter': 0,
+                        puerta: 0,
+                        avih: 0,
+                        zz: 0
+                    };
+                }
+                bodegaData[bodega][item.category]++;
+            });
+
+            if (Object.keys(bodegaData).length === 0) {
+                bodegasContainer.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">No hay bodegas registradas</p>';
+                return;
+            }
+
+            const bodegasOrdenadas = Object.keys(bodegaData).sort((a, b) => {
+                const numA = parseInt(a) || 0;
+                const numB = parseInt(b) || 0;
+                return numA - numB;
+            });
+
+            bodegasContainer.innerHTML = bodegasOrdenadas.map(bodega => {
+                const data = bodegaData[bodega];
+                const total = Object.values(data).reduce((sum, val) => sum + val, 0);
+                
+                return `
+                    <div class="bodega-card">
+                        <div class="bodega-card-header">
+                            <h3>🗄️ BODEGA ${bodega}</h3>
+                            <span class="total">${total}</span>
+                        </div>
+                        <div class="bodega-details">
+                            ${data.local > 0 ? `<div class="bodega-detail-item"><span class="label">🏠 Locales</span><span class="value">${data.local}</span></div>` : ''}
+                            ${data.conexion > 0 ? `<div class="bodega-detail-item"><span class="label">🔄 Conexiones</span><span class="value">${data.conexion}</span></div>` : ''}
+                            ${data.priority > 0 ? `<div class="bodega-detail-item"><span class="label">⭐ Priority</span><span class="value">${data.priority}</span></div>` : ''}
+                            ${data['gate-despacho'] > 0 ? `<div class="bodega-detail-item"><span class="label">🚪 Gate Despacho</span><span class="value">${data['gate-despacho']}</span></div>` : ''}
+                            ${data['gate-counter'] > 0 ? `<div class="bodega-detail-item"><span class="label">📊 Gate Counter</span><span class="value">${data['gate-counter']}</span></div>` : ''}
+                            ${data.puerta > 0 ? `<div class="bodega-detail-item"><span class="label">🚪 Mal. Puerta</span><span class="value">${data.puerta}</span></div>` : ''}
+                            ${data.avih > 0 ? `<div class="bodega-detail-item"><span class="label">🐾 AVIH</span><span class="value">${data.avih}</span></div>` : ''}
+                            ${data.zz > 0 ? `<div class="bodega-detail-item"><span class="label">🔒 ZZ Retenido</span><span class="value">${data.zz}</span></div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateConveyerHistory() {
+            const container = document.getElementById('conveyerHistoryContainer');
+            
+            if (conveyerData.history.length === 0) {
+                container.innerHTML = '<p style="color: #999; text-align: center;">No hay escaneos registrados</p>';
+                return;
+            }
+
+            container.innerHTML = conveyerData.history.map(item => {
+                let categoryDisplay = categoryNames[item.category];
+                if (item.specialItem) {
+                    categoryDisplay += ` - ${specialItemNames[item.specialItem]}`;
+                }
+                
+                return `
+                    <div class="history-item">
+                        <div class="header-row">
+                            <div>
+                                <span class="barcode">${item.barcode}</span>
+                                <span style="color: #999; font-size: 0.85em; margin-left: 10px;">${item.time}</span>
+                            </div>
+                            <span class="category-tag ${item.category}">${categoryDisplay}</span>
+                        </div>
+                        <div style="color: #666; font-size: 0.8em; margin-top: 5px;">
+                            ${item.matricula} | ${item.servicio} | <strong>Bodega: ${item.bodega}</strong>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function undoLastConveyer() {
+            if (conveyerData.history.length === 0) {
+                showToast('⚠️ No hay escaneos para deshacer', '#ff9800');
+                return;
+            }
+
+            const lastItem = conveyerData.history.shift();
+            conveyerData.counters[lastItem.category]--;
+            
+            updateConveyerCounters();
+            updateConveyerHistory();
+            
+            showToast('↶ Último escaneo deshecho', '#2196f3');
+        }
+
+        function resetConveyer() {
+            if (!confirm('¿Está seguro de reiniciar todos los contadores de CONVEYER?')) return;
+
+            conveyerData = {
+                counters: {
+                    local: 0,
+                    conexion: 0,
+                    priority: 0,
+                    'gate-despacho': 0,
+                    'gate-counter': 0,
+                    puerta: 0,
+                    avih: 0,
+                    zz: 0
+                },
+                history: []
+            };
+            conveyerCurrentCategory = null;
+            conveyerCurrentSpecialItem = null;
+            
+            document.querySelectorAll('#conveyerModule .category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.special-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.getElementById('conveyerSpecialItems').classList.remove('show');
+            
+            document.getElementById('conveyerScanIndicator').textContent = 
+                'Seleccione una categoría para comenzar';
+            
+            stopConveyerCamera();
+            updateConveyerCounters();
+            updateConveyerHistory();
+            
+            showToast('🔄 Contadores de CONVEYER reiniciados', '#9c27b0');
+        }
+
+        function generateConveyerPDF() {
+            if (conveyerData.history.length === 0) {
+                showToast('⚠️ No hay datos para generar el PDF', '#ff9800');
+                return;
+            }
+
+            // Similar al PDF de Conveyer original pero adaptado
+            showToast('📄 Función de PDF en desarrollo para Conveyer', '#667eea');
+        }
+
+        // Event Listeners Conveyer
+        document.getElementById('conveyerBarcodeInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                processConveyerBarcode(this.value);
+            }
+        });
+
+        document.getElementById('conveyerMatricula').addEventListener('input', function(e) {
+            let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (value.length > 2) {
+                value = value.substring(0, 2) + '-' + value.substring(2, 5);
+            }
+            e.target.value = value;
+        });
+
+        document.getElementById('conveyerServicio').addEventListener('input', function(e) {
+            let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (value.length > 2) {
+                value = value.substring(0, 2) + '-' + value.substring(2, 6);
+            }
+            e.target.value = value;
+        });
+
+        document.getElementById('conveyerBodega').addEventListener('input', function(e) {
             e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
         });
+
+        // Event listeners para botones volver
+        document.getElementById('pozoBackBtn').addEventListener('click', function() {
+            backToSelector();
+        });
+
+        document.getElementById('conveyerBackBtn').addEventListener('click', function() {
+            backToSelector();
+        });
+
+        function showToast(message, color) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            toast.style.background = color;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
     </script>
 </body>
 </html>
